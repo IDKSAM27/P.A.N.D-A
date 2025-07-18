@@ -11,4 +11,4 @@ class Intent(BaseModel):
 
     class Config:
         # Allows creating the model from a dictionary
-        from_attributes = True
+        from_attributes = True 

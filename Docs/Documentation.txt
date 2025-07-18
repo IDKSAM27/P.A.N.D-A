@@ -1,4 +1,12 @@
 Step 1: Define the Data Model for Intent
     I basically need a well-defined, validated structure for what the LLM will return.
     This ensures that the rest of our application can reliably work with the LLM's output.
-    I'll use Pydantic for this, which enforces data types and validation.
+    I'll use Pydantic for this, which enforces data types and validation. 
+
+    Used classes as I'm making sure that I follow SOLID principles.
+
+Step 2: Define the Abstract LLM interface
+    I'll define the contract for any LLM parser we might use. This abstraction allows us to
+    easily swap out OpenRouter for another service (maybe OpenAI or local LLM(If I care enought to develop one!))
+    in the future without changing the rest of the application.
+    (Again I looked forward to adhere to the SOLID).
