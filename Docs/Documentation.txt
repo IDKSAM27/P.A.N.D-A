@@ -9,4 +9,6 @@ Step 2: Define the Abstract LLM interface
     I'll define the contract for any LLM parser we might use. This abstraction allows us to
     easily swap out OpenRouter for another service (maybe OpenAI or local LLM(If I care enought to develop one!))
     in the future without changing the rest of the application.
-    (Again I looked forward to adhere to the SOLID).
+    (Again I looked forward to adhere to the SOLID). 
+
+Step 3: 
