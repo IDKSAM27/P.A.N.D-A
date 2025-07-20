@@ -57,5 +57,38 @@ class OpenRouterParser(LLMInterface):
             print(f"Error parsing LLM response: {e}")
             raise
 
-    
-    
+    def _build_system_prompt(self, df_columns: List[str]) -> str:
+        """
+        Created a detailed system prompt for the LLM.
+        """
+
+        return f"""
+        You are an expert at parsing natural language commands into structured JSON format.
+        Your task is to analyze the user's command and convert it into a json object that conforms to the specified scheme.
+
+        The user is working with a dataset that has the following columns: {', '.join(df_columns)}
+
+        Analyze the user's command to determine the operation target column(s), grouping, and any filters.
+
+        Possible operations are: 'mean', 'sum', 'count', 'median', 'min', 'max', 'plot'.
+
+        - For plotting, set 'operation' to 'plot' and use the 'description' field to describe the plot request.
+        - The 'target_column' is the column on which the main aggregation is performed (e.g., 'sales' in "average sales").
+        - The 'group_by' field should be a list of columns for aggregation (e.g., ['region'] in "by region").
+        - The 'filters' should be a dictionary of key-value pairs (e.g., {{"product_category": "electronics"}}).
+        - Provide a brief, one-sentence 'description' of the task.
+
+        You MUST repsond with ONLY a valid JSON object. Do not include any explanatory text.
+        Example command: "What is the total revenue for shoes in New York?"
+        Example JSON output: 
+        {{
+            "operation": "sum",
+            "target_column": "revenue",
+            "group_by": null,
+            "filters": {{
+                "produce_category": "shoes",
+                "state": "New York"
+            }},
+            "description": "Calculate the sum of revenue for shoes in New York."
+        }}
+        """
