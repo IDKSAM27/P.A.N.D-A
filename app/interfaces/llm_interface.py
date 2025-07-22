@@ -1,12 +1,14 @@
+# voice_data_assistant/app/interfaces/llm_interface.py
+
 from abc import ABC, abstractmethod
 from typing import List
 from app.models.intent import Intent
 
 class LLMInterface(ABC):
     """
-    Abstract Base Class for a Large Language Model parser. 
-
-    This interface defines the contrast for any class that aims to parse
+    Abstract Base Class for a Large Language Model parser.
+    
+    This interface defines the contract for any class that aims to parse
     a natural language command into a structured Intent object.
     """
 
@@ -16,12 +18,11 @@ class LLMInterface(ABC):
         Parses a natural language command to extract a structured intent.
 
         Args:
-            command(str): The natural language command from the user.
+            command (str): The natural language command from the user.
             df_columns (List[str]): A list of column names from the dataframe
-            to provide context to the LLM.
+                                     to provide context to the LLM.
 
         Returns:
             Intent: A structured Intent object representing the user's request.
         """
-
         pass
