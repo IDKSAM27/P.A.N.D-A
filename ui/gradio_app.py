@@ -78,7 +78,7 @@ def process_data_and_command(csv_file, audio_command):
 
 # --- Gradio Interface Definition ---
 with gr.Blocks(theme=gr.themes.Soft(), title="Voice Data Assistant") as app:
-    gr.Markdown("# 🗣️ Voice-Driven Data Analytics Assistant")
+    gr.Markdown("# P.A.N.D-A (Pandas Assistant for Natural Data-Analytics)")
     gr.Markdown("Upload a CSV file, then use your voice to ask questions about the data.")
 
     with gr.Row():
