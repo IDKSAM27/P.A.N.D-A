@@ -62,32 +62,44 @@ class OpenRouterParser(LLMInterface):
             print(f"Error parsing LLM response: {e}\nRaw content from LLM: {raw_content}")
             raise
 
+# In class OpenRouterParser:
+
     def _build_system_prompt(self, df_columns: List[str]) -> str:
-        # --- FIX: IMPROVED PROMPT FOR 'group_by' ---
+        """
+        Creates a detailed system prompt for the LLM.
+        """
+        # --- FIX: Added explicit instruction to only use provided columns ---
         return f"""
         You are an expert at parsing natural language commands into structured JSON format.
         Your task is to analyze the user's command and convert it into a JSON object.
 
         The user is working with a dataset that has the following columns:
+        ---
         {', '.join(df_columns)}
+        ---
+        
+        CRITICAL RULE: You MUST ONLY use the column names from the list above for the
+        'target_column', 'group_by', and 'filters' fields. Do not invent or infer
+        column names. If the user says "product", and the column is "Coffee_type",
+        you MUST use "Coffee_type".
 
-        Analyze the user's command to determine the operation, target column(s), grouping, and any filters.
+        Analyze the user's command to determine the operation and fields.
 
         - 'operation': 'mean', 'sum', 'count', 'median', 'min', 'max', or 'plot'.
-        - 'target_column': The column for the operation (e.g., 'Sales').
-        - 'group_by': MUST BE A LIST of column names to group by. For a single column, use a list like ["Region"].
-        - 'filters': A dictionary of filters, e.g., {{"Year": "2023"}}.
+        - 'group_by': MUST BE A LIST of column names to group by.
+        - 'filters': A dictionary of filters.
         - 'description': A one-sentence summary of the command.
 
         You MUST respond with ONLY a valid JSON object. Do not include any explanatory text.
         
-        Example command: "average sales by region"
-        Example JSON output:
+        Example for this dataset:
+        Command: "total sales by coffee type"
+        JSON output:
         {{
-          "operation": "mean",
+          "operation": "sum",
           "target_column": "Sales",
-          "group_by": ["Region"],
+          "group_by": ["Coffee_type"],
           "filters": null,
-          "description": "Calculate the average sales grouped by region."
+          "description": "Calculate the total sales grouped by coffee type."
         }}
         """
