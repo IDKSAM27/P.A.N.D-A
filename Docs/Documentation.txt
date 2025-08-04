@@ -16,3 +16,8 @@ Step 3: Implement the OpenRouter LLM parser
     This class will inherit from LLMInterface and implement the `parse_command` method.
 
     I'll use the requests library for the API call and python-dotenv to manage the API key securely.
+
+====================================================================================================================
+
+uvicorn api.main:app --reload
+
