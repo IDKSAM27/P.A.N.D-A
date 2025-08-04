@@ -1,8 +1,14 @@
+# voice_data_assistant/api/main.py
+
 import os
 import sys
 import pandas as pd
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+import io
+import uuid
+
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from pydantic import BaseModel
 
 # Add the project root to the Python path to allow imports from `app`
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -11,8 +17,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from app.llm.openrouter_parser import OpenRouterParser
 from app.processing.pandas_processor import PandasProcessor
 from app.core.command_pipeline import CommandPipeline
-from app.models.intent import Intent # Though not used directly, good for context
-from app.models.result import Result # Will be our response model
+from app.models.result import Result
 
 # --- Initialization ---
 load_dotenv()
@@ -21,57 +26,92 @@ api_key = os.getenv("OPENROUTER_API_KEY")
 if not api_key:
     raise ValueError("OPENROUTER_API_KEY not found. Please set it in your .env file.")
 
-# Instantiate our core components
 llm_parser = OpenRouterParser(api_key=api_key)
 data_processor = PandasProcessor()
 pipeline = CommandPipeline(llm_parser=llm_parser, data_processor=data_processor)
 
-# Create the FastAPI app instance
 app = FastAPI(
     title="Voice Data Assistant API",
     description="An API to process natural language commands against a dataset.",
-    version="1.0.0"
+    version="1.1.0"
 )
 
-# For now, we'll use a hardcoded sample DataFrame for testing the API endpoint.
-# In the next step, we'll replace this with a dynamic file upload mechanism.
-def get_sample_dataframe() -> pd.DataFrame:
-    """Creates a sample DataFrame for demonstration purposes."""
-    data = {
-        'Region': ['North', 'North', 'South', 'South', 'West', 'West', 'East', 'East'],
-        'Product': ['A', 'B', 'A', 'B', 'A', 'B', 'A', 'B'],
-        'Sales': [100, 150, 200, 250, 120, 180, 220, 280],
-        'Year': [2023, 2023, 2023, 2023, 2024, 2024, 2024, 2024]
-    }
-    return pd.DataFrame(data)
+# --- In-Memory Storage for Demo Purposes ---
+# This dictionary will act as our temporary "database" to store dataframes.
+# The key will be a unique session_id.
+dataframes_cache = {}
+
+# --- Pydantic Models for Request Bodies ---
+class CommandRequest(BaseModel):
+    session_id: str
+    command: str
 
 # --- API Endpoints ---
 
 @app.get("/")
 def read_root():
     """A simple root endpoint to confirm the API is running."""
-    return {"message": "Welcome to the Voice Data Assistant API. Use the /docs endpoint to see the API documentation."}
+    return {"message": "Welcome to the Voice Data Assistant API. Use /docs to see endpoints."}
+
+@app.post("/upload_csv")
+async def upload_csv(file: UploadFile = File(...)):
+    """
+    Uploads a CSV file, stores it in memory, and returns a session ID.
+    """
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a .csv file.")
+    
+    try:
+        # Read the uploaded file's content into memory
+        content = await file.read()
+        # Use io.StringIO to treat the byte string as a file for pandas
+        df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+        
+        # Generate a unique session ID for this file
+        session_id = str(uuid.uuid4())
+        
+        # Store the dataframe in our cache
+        dataframes_cache[session_id] = df
+        
+        print(f"-> [API] Uploaded '{file.filename}'. Assigned Session ID: {session_id}")
+        
+        return {
+            "message": f"File '{file.filename}' uploaded successfully.",
+            "session_id": session_id,
+            "columns": df.columns.tolist(),
+            "shape": df.shape
+        }
+    except Exception as e:
+        print(f"-> [API] Error processing uploaded file: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing CSV file: {e}")
 
 
 @app.post("/analyze", response_model=Result)
-async def analyze_command(command: str):
+async def analyze_command(request: CommandRequest):
     """
-    Receives a natural language command and processes it against the sample dataset.
+    Receives a command and a session_id, then processes the command
+    against the corresponding uploaded dataframe.
     """
+    session_id = request.session_id
+    command = request.command
+    
+    print(f"-> [API] Received command for Session ID {session_id}: '{command}'")
+    
+    # Retrieve the dataframe from our cache
+    if session_id not in dataframes_cache:
+        raise HTTPException(status_code=404, detail="Session ID not found. Please upload a file first.")
+    
+    df = dataframes_cache[session_id]
+    
     try:
-        df = get_sample_dataframe()
-        print(f"-> [API] Received command: '{command}'")
-        
         # Run the existing, tested pipeline
         result = pipeline.run(command, df)
         
         if result.result_type == 'error':
-            # It's better to return a proper HTTP error for API clients
             raise HTTPException(status_code=400, detail=result.message)
             
         return result
     except Exception as e:
-        # Catch any unexpected errors from the pipeline
         print(f"-> [API] Internal Server Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
