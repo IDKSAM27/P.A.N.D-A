@@ -1,6 +1,7 @@
 // frontend/src/App.js
 import React, { useState } from 'react';
 import './App.css';
+import CommandInput from './CommandInput'; // <-- Import the new component
 
 function App() {
   const [sessionInfo, setSessionInfo] = useState(null);
@@ -10,7 +11,7 @@ function App() {
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
-    setSessionInfo(null); // Reset previous session on new file selection
+    setSessionInfo(null);
     setError('');
   };
 
@@ -53,9 +54,9 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Voice Data Assistant</h1>
-        <p>Upload your CSV file to begin.</p>
         
         <div className="upload-container">
+          <h2>Step 1: Upload Data</h2>
           <input type="file" accept=".csv" onChange={handleFileChange} />
           <button onClick={handleUpload} disabled={isLoading}>
             {isLoading ? 'Uploading...' : 'Upload File'}
@@ -64,16 +65,10 @@ function App() {
 
         {error && <p className="error-message">{error}</p>}
         
+        {/* --- UPDATE: Conditionally render the CommandInput component --- */}
         {sessionInfo && (
-          <div className="session-info">
-            <h3>File Loaded Successfully!</h3>
-            <p><strong>Session ID:</strong> {sessionInfo.session_id}</p>
-            <p><strong>Columns:</strong> {sessionInfo.columns.join(', ')}</p>
-            <p>Ready to analyze.</p>
-          </div>
+          <CommandInput sessionId={sessionInfo.session_id} />
         )}
-        
-        {/* We will add the command input component here in the next step */}
 
       </header>
     </div>
