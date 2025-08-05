@@ -21,3 +21,10 @@ Step 3: Implement the OpenRouter LLM parser
 
 uvicorn api.main:app --reload
 
+cd frontend
+npm start
+
+====================================================================================================================
+
+"Failed to fetch" error is a classic CORS (Cross-Origin Resource Sharing) issue.
+    Context: upon uploading the .csv, 'Failed to fetch' appears.
