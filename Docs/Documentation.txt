@@ -19,6 +19,8 @@ Step 3: Implement the OpenRouter LLM parser
 
 ====================================================================================================================
 
+## Run both on the parallel terminals
+
 uvicorn api.main:app --reload
 
 cd frontend
