@@ -41,3 +41,56 @@ button {
   background-color: #333;
   text-align: left;
 }
+
+.analysis-container {
+  margin-top: 30px;
+  width: 80%;
+  max-width: 700px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.command-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.command-input {
+  width: 70%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.result-container {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.result-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #61dafb;
+}
+
+.result-table {
+  width: 100%;
+  margin-top: 15px;
+  border-collapse: collapse;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid #444;
+  padding: 8px;
+  text-align: left;
+}
+
+.result-table th {
+  background-color: #4caf50;
+  color: white;
+}
