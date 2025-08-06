@@ -209,3 +209,60 @@ button:disabled {
 .terminal-toggle-btn:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
+
+/* --- REVISED H2 HEADING STYLE --- */
+h2 {
+  font-size: 1rem; /* Slightly smaller for a sleeker look */
+  font-weight: 700; /* Bolder */
+  color: #a7d8ff; /* A nice light blue accent */
+  background-color: rgba(76, 175, 80, 0.1);
+  border-bottom: 2px solid #4caf50;
+  margin-top: 0;
+  margin-bottom: 25px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px; /* Wider spacing */
+  padding: 10px 10px;
+  border-radius: 4px;
+}
+
+
+/* --- NEW STYLES FOR CUSTOM FILE INPUT --- */
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.file-input-hidden {
+  display: none; /* Hide the actual input */
+}
+
+.file-input-label {
+  background-color: #3e4451;
+  color: #e6e6e6;
+  border: 1px solid #555;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  display: inline-block;
+}
+
+.file-input-label:hover {
+  background-color: #4a505c;
+  border-color: #777;
+}
+
+.file-name {
+  margin-left: 15px;
+  font-family: monospace;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+/* --- Small adjustment to main Upload button margin --- */
+.upload-container > button {
+  margin-top: 0;
+}

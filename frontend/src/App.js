@@ -1,10 +1,10 @@
+// frontend/src/App.js
 import React, { useState } from 'react';
 import './App.css';
 import CommandInput from './CommandInput';
 import TerminalView from './TerminalView';
 
 function App() {
-  // The below are called states (for the people who don't understand dog shit)
   const [sessionInfo, setSessionInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -12,9 +12,12 @@ function App() {
   const [showTerminal, setShowTerminal] = useState(false);
 
   const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
-    setSessionInfo(null);
-    setError('');
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setSessionInfo(null);
+      setError('');
+    }
   };
 
   const handleUpload = async () => {
@@ -42,7 +45,6 @@ function App() {
 
   return (
     <div className="App">
-      {/* --- New Terminal Toggle Button --- */}
       <button className="terminal-toggle-btn" onClick={() => setShowTerminal(!showTerminal)}>
         {showTerminal ? 'Hide' : 'Show'} Logs
       </button>
@@ -54,7 +56,23 @@ function App() {
 
         <div className="container upload-container">
           <h2>Step 1: Upload Data</h2>
-          <input type="file" accept=".csv" onChange={handleFileChange} />
+          
+          {/* --- UPDATED FILE INPUT --- */}
+          <div className="file-input-wrapper">
+            <label htmlFor="csv-upload" className="file-input-label">
+              Choose File
+            </label>
+            <input 
+              id="csv-upload" 
+              type="file" 
+              accept=".csv" 
+              onChange={handleFileChange} 
+              className="file-input-hidden"
+            />
+            {selectedFile && <span className="file-name">{selectedFile.name}</span>}
+          </div>
+          {/* --- END OF UPDATE --- */}
+
           <button onClick={handleUpload} disabled={isLoading || !selectedFile}>
             {isLoading ? 'Uploading...' : 'Upload File'}
           </button>
@@ -70,9 +88,7 @@ function App() {
         )}
       </header>
 
-      {/* --- Conditionally render the Terminal --- */}
       {showTerminal && <TerminalView />}
-
     </div>
   );
 }

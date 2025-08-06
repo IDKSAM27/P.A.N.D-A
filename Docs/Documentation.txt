@@ -53,3 +53,7 @@ Here's the plan:
     the WebSocket endpoint, listen for log messages, and display them in a terminal-like window. A button in the main App will toggle its visibility.
 
 Step 1: Modify the Backend to broadcast logs
+
+
+
+
