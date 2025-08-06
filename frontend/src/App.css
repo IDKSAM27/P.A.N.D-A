@@ -1,95 +1,198 @@
+/* Import a modern, clean font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+/* --- Base & App Layout --- */
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1a1a1a; /* Darker background for the whole page */
+}
+
 .App {
   text-align: center;
+  color: #e6e6e6;
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #242424; /* A slightly lighter main container background */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding: 40px 20px;
+  box-sizing: border-box;
 }
 
-.upload-container {
-  margin: 20px;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #ffffff;
 }
 
-button {
-  margin-left: 10px;
-  padding: 10px 15px;
-  font-size: 16px;
-  cursor: pointer;
+h2 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #4caf50; /* Accent color for subheadings */
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.error-message {
-  color: #ff6b6b;
-  margin-top: 15px;
-}
-
-.session-info {
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid #4caf50;
-  border-radius: 8px;
-  background-color: #333;
+/* --- Main Content Containers --- */
+.container {
+  background-color: #2d2d2d;
+  border-radius: 12px;
+  padding: 30px;
+  margin-top: 30px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  border: 1px solid #444;
   text-align: left;
 }
 
-.analysis-container {
-  margin-top: 30px;
-  width: 80%;
-  max-width: 700px;
-  border: 1px solid #ccc;
+
+/* --- File Upload Styling --- */
+.upload-container input[type="file"] {
+  border: 2px dashed #555;
   border-radius: 8px;
   padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  color: #aaa;
+  background-color: #333;
+  cursor: pointer;
+  transition: border-color 0.2s;
 }
 
-.command-form {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
+.upload-container input[type="file"]:hover {
+  border-color: #4caf50;
+}
+
+/* --- General Button & Input Styling --- */
+button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+  margin-top: 20px;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+/* --- Analysis Section Styling --- */
+.columns-display {
+  background-color: #3e4451;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-size: 0.9rem;
+}
+.columns-display span {
+  color: #a7d8ff;
+  font-family: monospace;
 }
 
 .command-input {
-  width: 70%;
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background-color: #333;
+  color: #e6e6e6;
+  box-sizing: border-box;
+  margin-bottom: 20px;
 }
 
+.command-input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+}
+
+/* --- Result Display Styling --- */
 .result-container {
-  margin-top: 20px;
-  text-align: left;
+  margin-top: 30px;
+}
+
+.result-message {
+  font-weight: 500;
+  padding: 12px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 4px solid #4caf50;
+  border-radius: 4px;
 }
 
 .result-value {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 2rem;
+  font-weight: 700;
   color: #61dafb;
+  margin-top: 15px;
 }
 
 .result-table {
   width: 100%;
-  margin-top: 15px;
+  margin-top: 20px;
   border-collapse: collapse;
+  font-size: 0.95rem;
 }
 
 .result-table th,
 .result-table td {
   border: 1px solid #444;
-  padding: 8px;
+  padding: 12px 15px;
   text-align: left;
 }
 
 .result-table th {
-  background-color: #4caf50;
-  color: white;
+  background-color: #333;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.result-table tr:nth-child(even) {
+  background-color: #2d2d2d;
+}
+.result-table tr:nth-child(odd) {
+  background-color: #313131;
+}
+
+.result-table tr:hover {
+  background-color: #3f3f3f;
+}
+
+/* --- Error Message Styling --- */
+.error-message {
+  color: #ff8a8a;
+  background-color: rgba(255, 107, 107, 0.1);
+  border: 1px solid #ff6b6b;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+  width: 90%;
+  max-width: 700px;
+  box-sizing: border-box;
 }

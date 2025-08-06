@@ -1,7 +1,6 @@
-// frontend/src/App.js
 import React, { useState } from 'react';
 import './App.css';
-import CommandInput from './CommandInput'; // <-- Import the new component
+import CommandInput from './CommandInput';
 
 function App() {
   const [sessionInfo, setSessionInfo] = useState(null);
@@ -16,11 +15,7 @@ function App() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      setError('Please select a CSV file first.');
-      return;
-    }
-
+    if (!selectedFile) return;
     setIsLoading(true);
     setError('');
 
@@ -32,19 +27,11 @@ function App() {
         method: 'POST',
         body: formData,
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to upload file.');
-      }
-
+      if (!response.ok) throw new Error(data.detail || 'Failed to upload file.');
       setSessionInfo(data);
-      console.log('Upload successful:', data);
-
     } catch (err) {
       setError(err.message);
-      console.error('Upload error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -54,22 +41,24 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Voice Data Assistant</h1>
-        
-        <div className="upload-container">
+        <p>Your personal AI for data analysis.</p>
+
+        <div className="container upload-container">
           <h2>Step 1: Upload Data</h2>
           <input type="file" accept=".csv" onChange={handleFileChange} />
-          <button onClick={handleUpload} disabled={isLoading}>
+          <button onClick={handleUpload} disabled={isLoading || !selectedFile}>
             {isLoading ? 'Uploading...' : 'Upload File'}
           </button>
         </div>
 
         {error && <p className="error-message">{error}</p>}
         
-        {/* --- UPDATE: Conditionally render the CommandInput component --- */}
         {sessionInfo && (
-          <CommandInput sessionId={sessionInfo.session_id} />
+          <CommandInput 
+            sessionId={sessionInfo.session_id} 
+            columns={sessionInfo.columns} 
+          />
         )}
-
       </header>
     </div>
   );

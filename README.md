@@ -19,3 +19,7 @@ My Plan for next few days
 +------------------------------------------------------------------+
 
 ```
+
+A Professional way to handle the UI, which I found on Reddit:
+
+![UI](gallery/ui.png)

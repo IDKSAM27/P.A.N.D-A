@@ -39,3 +39,17 @@ To improve the prompt template and the accuracy of the output provided by the ll
 ====================================================================================================================
 
 Now let's make the UI better as we have got a working model of our project.
+
+- Providing a real-time log stream gives the user transparency into the backend processes, 
+which is fantastic for building trust and for debugging.
+- Directly showing the terminal output is not possible due to browser security restrictions. 
+However, we can achieve the exact same effect by implementing a modern, real-time communication channel between our backend and frontend using WebSockets.
+
+Here's the plan:
+    - Backend (FastAPI): We will create a WebSocket endpoint (/ws/logs). We'll then redirect all of our application's 
+    logging output to be broadcast over this WebSocket to any connected clients.
+
+    - Frontend (React): We will create a new TerminalView component. This component will connect to 
+    the WebSocket endpoint, listen for log messages, and display them in a terminal-like window. A button in the main App will toggle its visibility.
+
+Step 1: Modify the Backend to broadcast logs
