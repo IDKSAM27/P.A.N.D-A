@@ -1,100 +1,79 @@
 import pandas as pd
+from typing import List, Optional
 from app.interfaces.processor_interface import ProcessorInterface
 from app.models.intent import Intent
 from app.models.result import Result
 
 class PandasProcessor(ProcessorInterface):
     """
-    A data processor that uses the pandas library to execute intents.
+    A data processor that uses pandas and is resilient to minor column name variations.
     """
+    def _normalize_name(self, name: str) -> str:
+        """Helper to standardize column names for comparison."""
+        return name.lower().replace("_", "").replace(" ", "")
+
+    def _find_closest_column_name(self, target_name: str, actual_columns: List[str]) -> Optional[str]:
+        """Finds the actual column name that best matches the target name."""
+        normalized_target = self._normalize_name(target_name)
+        for col in actual_columns:
+            if self._normalize_name(col) == normalized_target:
+                return col
+        return None
+
     def execute(self, intent: Intent, df: pd.DataFrame) -> Result:
-        """
-        Executes the given intent on the pandas DataFrame.
-
-        Args:
-            intent (Intent): The structured command to execute.
-            df (pd.DataFrame): The dataframe to operate on.
-
-        Returns:
-            Result: An object containing the result of the operation.
-        """
         try:
-            # --- 1. Apply Filters ---
-            # Create a filtered copy of the DataFrame to work with.
-            df_filtered = self._apply_filters(df, intent.filters)
+            actual_columns = df.columns.tolist()
 
-            # --- 2. Handle Non-Aggregating Operations ---
-            if intent.operation == 'plot':
-                # We won't implement the plotting logic here, just acknowledge the intent.
-                # The UI layer will handle the actual visualization.
-                return Result(
-                    result_type='plot',
-                    data={'intent': intent.model_dump()}, # Pass intent data to UI for plotting
-                    message=f"A plot was requested. Description: {intent.description}"
-                )
+            # --- FIX: Resolve column names before using them ---
+            def get_resolved_column(name):
+                resolved = self._find_closest_column_name(name, actual_columns)
+                if not resolved:
+                    raise KeyError(f"Column '{name}' could not be found in the dataset.")
+                return resolved
 
-            # Handle a simple count on the filtered data (no grouping, no target column)
-            if intent.operation == 'count' and not intent.group_by and not intent.target_column:
-                count = len(df_filtered)
-                return Result(
-                    result_type='value',
-                    data=count,
-                    message=f"{intent.description} Result: {count}."
-                )
-
-            # --- 3. Handle Grouping and Aggregation ---
-            if intent.group_by:
-                # Ensure group_by columns are valid
-                for col in intent.group_by:
-                    if col not in df_filtered.columns:
-                        raise KeyError(f"Grouping column '{col}' not found in the dataset.")
-
-                # For 'count', a target column isn't necessary.
-                if intent.operation == 'count':
-                    result_data = df_filtered.groupby(intent.group_by).size()
-                    message = f"Successfully performed count grouped by {intent.group_by}."
-                else:
-                    # For other aggregations, a target column is required.
-                    if not intent.target_column:
-                         raise ValueError("A target column is required for this grouped aggregation.")
-                    if intent.target_column not in df_filtered.columns:
-                        raise KeyError(f"Target column '{intent.target_column}' not found.")
-                    
-                    result_data = df_filtered.groupby(intent.group_by)[intent.target_column].agg(intent.operation)
-                    message = f"Successfully performed '{intent.operation}' on '{intent.target_column}' grouped by {intent.group_by}."
-
-                # Convert the result (which is a pandas Series) to a dictionary for easy use.
-                return Result(
-                    result_type='table',
-                    data=result_data.reset_index(name='result').to_dict(orient='records'),
-                    message=message
-                )
+            # Resolve target column
+            target_column = get_resolved_column(intent.target_column) if intent.target_column else None
             
-            # --- 4. Handle Simple Aggregation (No Grouping) ---
-            if intent.target_column:
-                if intent.target_column not in df_filtered.columns:
-                    raise KeyError(f"Target column '{intent.target_column}' not found.")
+            # Resolve group_by columns
+            group_by_columns = [get_resolved_column(col) for col in intent.group_by] if intent.group_by else []
+
+            # Resolve filter columns
+            resolved_filters = {}
+            if intent.filters:
+                for col, val in intent.filters.items():
+                    resolved_col = get_resolved_column(col)
+                    resolved_filters[resolved_col] = val
+            
+            df_filtered = self._apply_filters(df, resolved_filters)
+            
+            # ... (The rest of the logic uses the resolved names) ...
+
+            if intent.operation == 'count' and not group_by_columns:
+                count = len(df_filtered)
+                return Result(result_type='value', data=count, message=f"{intent.description} Result: {count}.")
+
+            if group_by_columns:
+                if intent.operation == 'count':
+                    result_data = df_filtered.groupby(group_by_columns).size()
+                    message = f"Successfully performed count grouped by {group_by_columns}."
+                else:
+                    if not target_column:
+                         raise ValueError("A target column is required for this grouped aggregation.")
+                    result_data = df_filtered.groupby(group_by_columns)[target_column].agg(intent.operation)
+                    message = f"Successfully performed '{intent.operation}' on '{target_column}' grouped by {group_by_columns}."
                 
-                result_val = df_filtered[intent.target_column].agg(intent.operation)
-                return Result(
-                    result_type='value',
-                    data=result_val,
-                    message=f"The result of '{intent.operation}' on '{intent.target_column}' is {result_val}."
-                )
+                return Result(result_type='table', data=result_data.reset_index(name='result').to_dict(orient='records'), message=message)
+            
+            if target_column:
+                result_val = df_filtered[target_column].agg(intent.operation)
+                return Result(result_type='value', data=result_val, message=f"The result of '{intent.operation}' on '{target_column}' is {result_val}.")
 
-            # --- 5. Fallback for unhandled cases ---
-            return Result(
-                result_type='error',
-                message=f"Could not determine the correct action for the intent: {intent.description}"
-            )
+            return Result(result_type='error', message=f"Could not determine the correct action for the intent: {intent.description}")
 
-        except (KeyError, AttributeError) as e:
-            return Result(result_type='error', message=f"Invalid column name provided: {e}")
-        except ValueError as e:
+        except (KeyError, ValueError) as e:
             return Result(result_type='error', message=str(e))
         except Exception as e:
-            # Catch any other unexpected pandas/python errors.
-            return Result(result_type='error', message=f"An unexpected error occurred during processing: {e}")
+            return Result(result_type='error', message=f"An unexpected error occurred: {e}")
 
     def _apply_filters(self, df: pd.DataFrame, filters: dict) -> pd.DataFrame:
         if not filters:
@@ -102,11 +81,6 @@ class PandasProcessor(ProcessorInterface):
         
         df_filtered = df.copy()
         for column, value in filters.items():
-            if column not in df_filtered.columns:
-                raise KeyError(f"Filter column '{column}' not found in the dataset.")
-            
-            # This is a simple equality filter. More complex logic (e.g., >, <, contains) could be added here.
-            # Using .astype(str) for safer comparison if types are mixed.
             df_filtered = df_filtered[df_filtered[column].astype(str).str.lower() == str(value).lower()]
         
         return df_filtered

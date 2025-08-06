@@ -32,3 +32,10 @@ npm start
     Context: upon uploading the .csv, 'Failed to fetch' appears.
     
 ====================================================================================================================
+
+To improve the prompt template and the accuracy of the output provided by the llm:
+    We have to keep on improving P.A.N.D-A/app/processing/pandas_processor.py
+
+====================================================================================================================
+
+Now let's make the UI better as we have got a working model of our project.
