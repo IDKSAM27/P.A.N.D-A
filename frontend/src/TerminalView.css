@@ -1,7 +1,6 @@
 .terminal-view {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  /* Remove bottom and right, as position is now handled by state */
   width: 500px;
   height: 300px;
   background-color: #1e1e1e;
@@ -12,6 +11,15 @@
   flex-direction: column;
   font-family: 'Courier New', Courier, monospace;
   z-index: 1000;
+  /* Add the smooth snap animation */
+  transition: top 0.3s ease-out, left 0.3s ease-out;
+  user-select: none; /* Prevent text selection while dragging */
+}
+/* NEW: Style for when the terminal is being dragged */
+.terminal-view.dragging {
+  /* Disable transition during drag for responsive movement */
+  transition: none; 
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6); /* Make shadow bigger */
 }
 .terminal-header {
   background-color: #333;
@@ -23,6 +31,11 @@
   align-items: center;
   color: #ccc;
   font-size: 14px;
+  cursor: grab; /* Indicate that this part is draggable */
+}
+/* NEW: Style for when the header is being actively grabbed */
+.terminal-header:active {
+  cursor: grabbing;
 }
 .connection-status.connected { color: #4caf50; }
 .terminal-body {
