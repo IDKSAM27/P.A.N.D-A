@@ -29,7 +29,7 @@ class OpenRouterParser(LLMInterface):
         try:
             response = requests.post(
                 url=self.api_url,
-                headers={ "Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json", "HTTP-Referer": "http://localhost", "X-Title": "Voice Data Assistant" },
+                headers={ "Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json", "HTTP-Referer": "http://localhost", "X-Title": "P.A.N.D-A (Pandas Assistant for Natural Data Analytics)" },
                 data=json.dumps(request_body)
             )
             response.raise_for_status()

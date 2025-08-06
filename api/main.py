@@ -71,7 +71,7 @@ llm_parser = OpenRouterParser(api_key=api_key)
 data_processor = PandasProcessor()
 pipeline = CommandPipeline(llm_parser=llm_parser, data_processor=data_processor)
 
-app = FastAPI(title="Voice Data Assistant API", version="1.2.0")
+app = FastAPI(title="P.A.N.D-A API", version="1.2.0")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 dataframes_cache = {}
@@ -83,7 +83,7 @@ class CommandRequest(BaseModel):
 # --- API Endpoints ---
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Voice Data Assistant API."}
+    return {"message": "Welcome to the P.A.N.D-A (Pandas Assistant for Natural Data-Analytics) API."}
 
 # --- FIX: Re-added the full, correct code for this endpoint ---
 @app.post("/upload_csv")
