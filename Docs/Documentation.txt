@@ -30,3 +30,5 @@ npm start
 
 "Failed to fetch" error is a classic CORS (Cross-Origin Resource Sharing) issue.
     Context: upon uploading the .csv, 'Failed to fetch' appears.
+    
+====================================================================================================================
