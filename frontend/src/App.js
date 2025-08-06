@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import './App.css';
 import CommandInput from './CommandInput';
+import TerminalView from './TerminalView';
 
 function App() {
+  // The below are called states (for the people who don't understand dog shit)
   const [sessionInfo, setSessionInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showTerminal, setShowTerminal] = useState(false);
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -39,6 +42,11 @@ function App() {
 
   return (
     <div className="App">
+      {/* --- New Terminal Toggle Button --- */}
+      <button className="terminal-toggle-btn" onClick={() => setShowTerminal(!showTerminal)}>
+        {showTerminal ? 'Hide' : 'Show'} Logs
+      </button>
+
       <header className="App-header">
         <h1>Voice Data Assistant</h1>
         <p>Your personal AI for data analysis.</p>
@@ -60,6 +68,10 @@ function App() {
           />
         )}
       </header>
+
+      {/* --- Conditionally render the Terminal --- */}
+      {showTerminal && <TerminalView />}
+
     </div>
   );
 }

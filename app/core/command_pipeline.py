@@ -1,4 +1,5 @@
 import pandas as pd
+import logging
 from app.interfaces.llm_interface import LLMInterface
 from app.interfaces.processor_interface import ProcessorInterface
 from app.models.result import Result
@@ -38,22 +39,22 @@ class CommandPipeline:
         Returns:
             Result: The final result of the operation.
         """
-        print(f"-> [Pipeline] Processing command: '{command}'")
+        logging.info(f"-> [Pipeline] Processing command: '{command}")
         try:
             # Step 1: Parse the natural language command into a structured intent.
             # We provide the dataframe's column names to give the LLM context.
             df_columns = df.columns.tolist()
             intent = self.llm_parser.parse_command(command, df_columns)
-            print(f"-> [Pipeline] LLM parsed intent: {intent.model_dump_json(indent=2)}")
+            logging.info(f"-> [Pipeline] LLM parsed intent: {intent.model_dump_json(indent=2)}")
 
             # Step 2: Execute the structured intent using the data processor.
             result = self.data_processor.execute(intent, df)
-            print(f"-> [Pipeline] Processor executed. Result type: {result.result_type}")
+            logging.info(f"-> [Pipeline] Processor executed. Result type: {result.result_type}")
             
             return result
 
         except Exception as e:
             # A top-level catch-all to ensure the pipeline always returns a Result object.
             error_message = f"An unexpected error occurred in the command pipeline: {e}"
-            print(f"-> [Pipeline] ERROR: {error_message}")
+            logging.info(f"-> [Pipeline] ERROR: {error_message}")
             return Result(result_type='error', message=error_message)

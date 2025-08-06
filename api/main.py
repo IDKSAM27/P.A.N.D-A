@@ -6,6 +6,7 @@ import io
 import uuid
 import logging
 from typing import List
+import asyncio
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,19 +46,18 @@ class WebSocketLogHandler(logging.Handler):
 
     def emit(self, record):
         log_entry = self.format(record)
-        # We need to run the async broadcast in a non-async context
-        import asyncio
-        asyncio.run(self.manager.broadcast(log_entry))
+        # --- FIX: Use create_task instead of asyncio.run() ---
+        # This correctly schedules the async task on the running event loop.
+        asyncio.create_task(self.manager.broadcast(log_entry))
 
 # --- Configure Root Logger ---
-# This captures logs from your entire application and sends them to the WebSocket
 log_handler = WebSocketLogHandler(manager)
 log_formatter = logging.Formatter("[%(levelname)s] %(message)s")
 log_handler.setFormatter(log_formatter)
 
 logging.basicConfig(level=logging.INFO, handlers=[
-    logging.StreamHandler(), # This will keep logging to the console as well
-    log_handler            # This adds our custom WebSocket handler
+    logging.StreamHandler(),
+    log_handler
 ])
 
 # --- Initialization ---
@@ -81,17 +81,55 @@ class CommandRequest(BaseModel):
     command: str
 
 # --- API Endpoints ---
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Voice Data Assistant API."}
+
+# --- FIX: Re-added the full, correct code for this endpoint ---
 @app.post("/upload_csv")
 async def upload_csv(file: UploadFile = File(...)):
-    # ... (this endpoint code remains the same)
-    logging.info(f"-> [API] Uploaded '{file.filename}'. Assigned Session ID: {session_id}")
-
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Invalid file type.")
+    
+    try:
+        content = await file.read()
+        df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+        
+        session_id = str(uuid.uuid4())
+        dataframes_cache[session_id] = df
+        
+        logging.info(f"-> [API] Uploaded '{file.filename}'. Assigned Session ID: {session_id}")
+        
+        return {
+            "message": f"File '{file.filename}' uploaded successfully.",
+            "session_id": session_id,
+            "columns": df.columns.tolist(),
+            "shape": df.shape
+        }
+    except Exception as e:
+        logging.error(f"-> [API] Error processing uploaded file: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing CSV file: {e}")
 
 @app.post("/analyze", response_model=Result)
 async def analyze_command(request: CommandRequest):
-    # ... (this endpoint code remains the same)
+    session_id = request.session_id
+    command = request.command
+    
     logging.info(f"-> [API] Received command for Session ID {session_id}: '{command}'")
-
+    
+    if session_id not in dataframes_cache:
+        raise HTTPException(status_code=404, detail="Session ID not found.")
+    
+    df = dataframes_cache[session_id]
+    
+    try:
+        result = pipeline.run(command, df)
+        if result.result_type == 'error':
+            raise HTTPException(status_code=400, detail=result.message)
+        return result
+    except Exception as e:
+        logging.error(f"-> [API] Internal Server Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- WebSocket Endpoint ---
 @app.websocket("/ws/logs")
@@ -100,9 +138,7 @@ async def websocket_endpoint(websocket: WebSocket):
     logging.info("Frontend terminal connected.")
     try:
         while True:
-            # Keep the connection alive
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         logging.info("Frontend terminal disconnected.")
-

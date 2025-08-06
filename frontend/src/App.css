@@ -196,3 +196,16 @@ button:disabled {
   max-width: 700px;
   box-sizing: border-box;
 }
+
+.terminal-toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1001;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid #888;
+  padding: 8px 16px;
+}
+.terminal-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
