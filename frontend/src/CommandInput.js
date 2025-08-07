@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 
+// A helper component to render the results table
 const ResultTable = ({ data }) => {
-  if (!data || data.length === 0) return null;
+  if (!data || data.length === 0) {
+    return null;
+  }
   const headers = Object.keys(data[0]);
+
   return (
     <table className="result-table">
       <thead>
@@ -13,7 +17,7 @@ const ResultTable = ({ data }) => {
       <tbody>
         {data.map((row, index) => (
           <tr key={index}>
-            {headers.map(header => <td key={header}>{row[header]}</td>)}
+            {headers.map(header => <td key={header}>{String(row[header])}</td>)}
           </tr>
         ))}
       </tbody>
@@ -63,17 +67,23 @@ function CommandInput({ sessionId, columns }) {
         <strong>Available columns:</strong> <span>{columns.join(', ')}</span>
       </div>
 
-      <input
-        type="text"
-        value={command}
-        onChange={(e) => setCommand(e.target.value)}
-        onKeyPress={handleKeyPress}
-        placeholder="e.g., total units sold by day"
-        className="command-input"
-      />
-      <button onClick={handleAnalyze} disabled={isLoading || !command}>
-        {isLoading ? 'Analyzing...' : 'Analyze'}
-      </button>
+      <div className="command-form">
+        <input
+          type="text"
+          value={command}
+          onChange={(e) => setCommand(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="e.g., total units sold by day"
+          className="command-input" // <-- FIX: Added correct class
+        />
+        <button 
+          onClick={handleAnalyze} 
+          disabled={isLoading || !command} 
+          className="button-primary" // <-- FIX: Added correct class
+        >
+          {isLoading ? 'Analyzing...' : 'Analyze'}
+        </button>
+      </div>
 
       {error && <p className="error-message">{error}</p>}
       

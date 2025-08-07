@@ -134,3 +134,103 @@ h2 {
     padding: 8px 16px;
 }
 .terminal-toggle-btn:hover { background-color: rgba(255, 255, 255, 0.2); }
+
+
+
+/* --- Styles for the Analysis Component (Step 2) --- */
+
+.analysis-container {
+  text-align: center;
+}
+
+.command-form {
+  display: flex;
+  flex-direction: column; /* Stack input and button vertically */
+  align-items: center;
+  gap: 20px; /* Space between input and button */
+  margin-bottom: 20px;
+}
+
+.command-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background-color: #333;
+  color: #e6e6e6;
+  box-sizing: border-box;
+}
+
+.command-input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+}
+
+.columns-display {
+  background-color: #3e4451;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.columns-display span {
+  color: #a7d8ff;
+  font-family: monospace;
+}
+
+/* --- Styles for the Result Display --- */
+
+.result-container {
+  margin-top: 30px;
+  text-align: left;
+}
+
+.result-message {
+  font-weight: 500;
+  padding: 12px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 4px solid #4caf50;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.result-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #61dafb;
+}
+
+.result-table {
+  width: 100%;
+  margin-top: 15px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid #444;
+  padding: 12px 15px;
+  text-align: left;
+}
+
+.result-table th {
+  background-color: #333;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.result-table tr:nth-child(even) {
+  background-color: #2d2d2d;
+}
+.result-table tr:nth-child(odd) {
+  background-color: #313131;
+}
+
+.result-table tr:hover {
+  background-color: #3f3f3f;
+}
