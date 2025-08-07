@@ -41,7 +41,7 @@ api_key = os.getenv("OPENROUTER_API_KEY")
 llm_parser = OpenRouterParser(api_key=api_key)
 data_processor = PandasProcessor()
 pipeline = CommandPipeline(llm_parser=llm_parser, data_processor=data_processor)
-app = FastAPI(title="Voice Data Assistant API", version="1.3.1")
+app = FastAPI(title="Voice Data Assistant API", version="1.3.2")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 dataframes_cache = {}
 
@@ -77,23 +77,29 @@ async def upload_csv(file: UploadFile = File(...)):
 @app.post("/sample_data")
 async def load_sample_data():
     try:
-        # --- FIX: Correctly locate the data directory from the project root ---
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        # --- DEFINITIVE FIX for File Path ---
+        # Get the directory where this script (main.py) is located.
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Go up one level to the project root.
+        project_root = os.path.dirname(current_dir)
+        # Construct the absolute path to the CSV file.
         sample_file_path = os.path.join(project_root, 'data', 'coffee.csv')
+        
+        logging.info(f"-> [API] Attempting to load sample data from: {sample_file_path}")
+        
         df = pd.read_csv(sample_file_path)
         session_data = create_session(df)
         logging.info(f"-> [API] Loaded sample data. Session: {session_data['session_id']}")
         return session_data
     except FileNotFoundError:
-        logging.error(f"-> [API] sample coffee.csv not found at path: {sample_file_path}")
-        raise HTTPException(status_code=500, detail="Sample data file not found on server.")
+        logging.error(f"-> [API] CRITICAL: Sample data file not found at expected path: {sample_file_path}")
+        raise HTTPException(status_code=500, detail="Sample data file not found on server. Please check file location.")
     except Exception as e:
         logging.error(f"-> [API] Error loading sample data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/analyze", response_model=Result)
 async def analyze_command(request: CommandRequest):
-    # This endpoint remains correct
     session_id = request.session_id; command = request.command
     logging.info(f"-> [API] Received command for Session ID {session_id}: '{command}'")
     if session_id not in dataframes_cache:
@@ -107,16 +113,13 @@ async def analyze_command(request: CommandRequest):
         logging.error(f"-> [API] Internal Server Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- FIX: Re-added the full, correct WebSocket implementation ---
 @app.websocket("/ws/logs")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     logging.info("Frontend terminal connected.")
     try:
         while True:
-            # Keep the connection alive; the client does not need to send data.
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         logging.info("Frontend terminal disconnected.")
-
