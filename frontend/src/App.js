@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import './App.css';
 import CommandInput from './CommandInput';
 import TerminalView from './TerminalView';
-import DataPreview from './DataPreview'; // <-- Import new component
+import DataPreview from './DataPreview';
 
 function App() {
   const [sessionInfo, setSessionInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState(''); // <-- Can be 'upload' or 'sample'
+  const [isLoading, setIsLoading] = useState('');
   const [error, setError] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [showTerminal, setShowTerminal] = useState(false);
-  const [showPreview, setShowPreview] = useState(false); // <-- State for preview modal
+  const [showPreview, setShowPreview] = useState(false);
 
-  const resetState = () => {
+  const resetForNewData = () => {
     setSessionInfo(null);
     setError('');
     setShowPreview(false);
@@ -22,7 +22,7 @@ function App() {
     const file = event.target.files[0];
     if (file) {
       setSelectedFile(file);
-      resetState();
+      resetForNewData();
     }
   };
 
@@ -34,7 +34,7 @@ function App() {
   const handleUpload = async () => {
     if (!selectedFile) return;
     setIsLoading('upload');
-    resetState();
+    resetForNewData();
     const formData = new FormData();
     formData.append('file', selectedFile);
     try {
@@ -51,8 +51,9 @@ function App() {
   
   const handleLoadSample = async () => {
     setIsLoading('sample');
-    resetState();
-    setSelectedFile(null); // Clear file input
+    resetForNewData();
+    setSelectedFile(null);
+    document.getElementById('csv-upload').value = null; // Clear file input visually
     try {
       const response = await fetch('http://127.0.0.1:8000/sample_data', { method: 'POST' });
       const data = await response.json();
@@ -75,22 +76,23 @@ function App() {
         <h1>Voice Data Assistant</h1>
         <p>Your personal AI for data analysis.</p>
 
-        {!sessionInfo && (
-          <div className="container upload-container">
-            <h2>Step 1: Provide Data</h2>
-            <div className="file-input-wrapper">
-              <label htmlFor="csv-upload" className="file-input-label">Choose Your File</label>
-              <input id="csv-upload" type="file" accept=".csv" onChange={handleFileChange} className="file-input-hidden" />
-              <button className="button-secondary" onClick={handleLoadSample} disabled={!!isLoading}>
-                {isLoading === 'sample' ? 'Loading...' : 'Use Sample Data'}
-              </button>
-            </div>
-            {selectedFile && <span className="file-name">Selected: {selectedFile.name}</span>}
-            <button onClick={handleUpload} disabled={!!isLoading || !selectedFile}>
+        {/* --- FIX: This component no longer vanishes (Bug #5) --- */}
+        <div className="container upload-container">
+          <h2>Step 1: Provide Data</h2>
+          <div className="file-input-wrapper">
+            <label htmlFor="csv-upload" className="file-input-label">Choose Your File</label>
+            <input id="csv-upload" type="file" accept=".csv" onChange={handleFileChange} className="file-input-hidden" />
+            <button className="button-secondary" onClick={handleLoadSample} disabled={!!isLoading}>
+              {isLoading === 'sample' ? 'Loading...' : 'Use Sample Data'}
+            </button>
+          </div>
+          <div className="upload-actions">
+            <span className="file-name">{selectedFile ? `Selected: ${selectedFile.name}` : 'No file selected.'}</span>
+            <button onClick={handleUpload} disabled={!!isLoading || !selectedFile} className="button-primary">
               {isLoading === 'upload' ? 'Uploading...' : 'Upload & Start'}
             </button>
           </div>
-        )}
+        </div>
         
         {error && <p className="error-message">{error}</p>}
         
