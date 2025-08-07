@@ -54,6 +54,11 @@ Here's the plan:
 
 Step 1: Modify the Backend to broadcast logs
 
+====================================================================================================================
+
+Now I'll add a choice - the user can upload his/her own .csv file or can use my own coffee.csv for testing and experience.
+
+
 
 
 

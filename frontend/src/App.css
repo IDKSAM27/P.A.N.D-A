@@ -266,3 +266,63 @@ h2 {
 .upload-container > button {
   margin-top: 0;
 }
+
+/* --- Preview and using default data --- */
+
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 15px; /* Adds space between the buttons */
+}
+
+/* Style for secondary action buttons */
+.button-secondary {
+  background-color: transparent;
+  border: 1px solid #4caf50;
+  color: #4caf50;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.button-secondary:hover {
+  background-color: #4caf50;
+  color: white;
+}
+.button-secondary:disabled {
+  border-color: #555;
+  color: #555;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
+/* New container header for a title and a button */
+.container-header {
+  width: 90%;
+  max-width: 700px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+.container-header h3 {
+  margin: 0;
+  color: #e6e6e6;
+}
+
+.button-tertiary {
+  background: none;
+  border: 1px solid #555;
+  color: #ccc;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.button-tertiary:hover {
+  background-color: #3e4451;
+  border-color: #777;
+}
