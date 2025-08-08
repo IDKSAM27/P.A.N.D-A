@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ChartView from './ChartView';
 
 // A helper component to render the results table
 const ResultTable = ({ data }) => {
@@ -92,6 +93,8 @@ function CommandInput({ sessionId, columns }) {
           <p className="result-message">{result.message}</p>
           {result.result_type === 'table' && <ResultTable data={result.data} />}
           {result.result_type === 'value' && <p className="result-value">{result.data.toString()}</p>}
+
+          {result.result_type === 'plot' && <ChartView plotData={result.plot_data} />}
         </div>
       )}
     </div>

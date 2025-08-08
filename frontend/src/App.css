@@ -235,3 +235,14 @@ h2 {
 .result-table tr:hover {
   background-color: #3f3f3f;
 }
+
+
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #3e4451;
+  border-radius: 8px;
+}
