@@ -145,7 +145,7 @@ h2 {
 
 .command-form {
   display: flex;
-  flex-direction: column; /* Stack input and button vertically */
+  flex-direction: row; 
   align-items: center;
   gap: 20px; /* Space between input and button */
   margin-bottom: 20px;
@@ -153,6 +153,7 @@ h2 {
 
 .command-input {
   width: 100%;
+  flex-grow: 1; /* This makes the input expand and push the button to the right */
   padding: 12px;
   font-size: 1rem;
   border-radius: 8px;

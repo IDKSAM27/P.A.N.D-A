@@ -58,7 +58,9 @@ Step 1: Modify the Backend to broadcast logs
 
 Now I'll add a choice - the user can upload his/her own .csv file or can use my own coffee.csv for testing and experience.
 
+Also added previewing of the data file selected (only the top 5 row, for now)
 
+====================================================================================================================
 
-
-
+We'll add support for plotting charts, basically visual representation.
+I'll use: chart.js and react-chartjs-2

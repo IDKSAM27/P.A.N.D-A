@@ -52,8 +52,11 @@ function App() {
   const handleLoadSample = async () => {
     setIsLoading('sample');
     resetForNewData();
-    setSelectedFile(null);
-    document.getElementById('csv-upload').value = null; // Clear file input visually
+    
+    // --- FIX: Set a mock file object to update the UI ---
+    setSelectedFile({ name: 'coffee.csv' });
+    
+    document.getElementById('csv-upload').value = null;
     try {
       const response = await fetch('http://127.0.0.1:8000/sample_data', { method: 'POST' });
       const data = await response.json();
@@ -61,6 +64,8 @@ function App() {
       processApiResponse(data);
     } catch (err) {
       setError(err.message);
+      // If sample fails, clear the mock file
+      setSelectedFile(null); 
     } finally {
       setIsLoading('');
     }
@@ -76,7 +81,6 @@ function App() {
         <h1>Voice Data Assistant</h1>
         <p>Your personal AI for data analysis.</p>
 
-        {/* --- FIX: This component no longer vanishes (Bug #5) --- */}
         <div className="container upload-container">
           <h2>Step 1: Provide Data</h2>
           <div className="file-input-wrapper">
