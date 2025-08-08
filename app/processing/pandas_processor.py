@@ -20,24 +20,23 @@ class PandasProcessor(ProcessorInterface):
                 return col
         return None
 
+    # voice_data_assistant/app/processing/pandas_processor.py
+# (No changes to imports or the first part of the class)
+# Replace the 'execute' method with this new version:
+
     def execute(self, intent: Intent, df: pd.DataFrame) -> Result:
         try:
             actual_columns = df.columns.tolist()
 
-            # --- FIX: Resolve column names before using them ---
             def get_resolved_column(name):
                 resolved = self._find_closest_column_name(name, actual_columns)
                 if not resolved:
                     raise KeyError(f"Column '{name}' could not be found in the dataset.")
                 return resolved
 
-            # Resolve target column
             target_column = get_resolved_column(intent.target_column) if intent.target_column else None
-            
-            # Resolve group_by columns
             group_by_columns = [get_resolved_column(col) for col in intent.group_by] if intent.group_by else []
 
-            # Resolve filter columns
             resolved_filters = {}
             if intent.filters:
                 for col, val in intent.filters.items():
@@ -45,42 +44,53 @@ class PandasProcessor(ProcessorInterface):
                     resolved_filters[resolved_col] = val
             
             df_filtered = self._apply_filters(df, resolved_filters)
-            
-            # ... (The rest of the logic uses the resolved names) ...
 
-            if intent.operation == 'count' and not group_by_columns:
-                count = len(df_filtered)
-                return Result(result_type='value', data=count, message=f"{intent.description} Result: {count}.")
+            # --- NEW: Plotting Logic ---
+            if intent.operation == 'plot':
+                if not group_by_columns or not target_column:
+                    raise ValueError("Plotting requires at least one grouping column and a target column.")
 
-            if group_by_columns:
-                if intent.operation == 'count':
-                    result_data = df_filtered.groupby(group_by_columns).size()
-                    message = f"Successfully performed count grouped by {group_by_columns}."
-                else:
-                    if not target_column:
-                         raise ValueError("A target column is required for this grouped aggregation.")
-                    result_data = df_filtered.groupby(group_by_columns)[target_column].agg(intent.operation)
-                    message = f"Successfully performed '{intent.operation}' on '{target_column}' grouped by {group_by_columns}."
+                # For plotting, we always perform a 'sum' aggregation for simplicity
+                agg_func = 'sum'
+                plot_df = df_filtered.groupby(group_by_columns)[target_column].agg(agg_func).reset_index()
                 
-                return Result(result_type='table', data=result_data.reset_index(name='result').to_dict(orient='records'), message=message)
+                # The first group_by column will be our labels (x-axis)
+                labels_col = group_by_columns[0]
+                
+                chart_data = {
+                    "labels": plot_df[labels_col].tolist(),
+                    "datasets": [{
+                        "label": f"{agg_func.capitalize()} of {target_column} by {labels_col}",
+                        "data": plot_df[target_column].tolist(),
+                        "backgroundColor": 'rgba(76, 175, 80, 0.5)',
+                        "borderColor": 'rgba(76, 175, 80, 1)',
+                        "borderWidth": 1,
+                    }]
+                }
+                
+                return Result(
+                    result_type='plot',
+                    message=intent.description,
+                    plot_data={
+                        "type": intent.plot_type or 'bar',
+                        "data": chart_data
+                    }
+                )
+
+            # --- Existing Logic ---
+            if intent.operation == 'count' and not group_by_columns:
+                # ... (no change here)
+            
+            if group_by_columns:
+                # ... (no change here)
             
             if target_column:
-                result_val = df_filtered[target_column].agg(intent.operation)
-                return Result(result_type='value', data=result_val, message=f"The result of '{intent.operation}' on '{target_column}' is {result_val}.")
+                # ... (no change here)
 
-            return Result(result_type='error', message=f"Could not determine the correct action for the intent: {intent.description}")
+            return Result(result_type='error', message=f"Could not determine action for: {intent.description}")
 
         except (KeyError, ValueError) as e:
             return Result(result_type='error', message=str(e))
         except Exception as e:
             return Result(result_type='error', message=f"An unexpected error occurred: {e}")
 
-    def _apply_filters(self, df: pd.DataFrame, filters: dict) -> pd.DataFrame:
-        if not filters:
-            return df
-        
-        df_filtered = df.copy()
-        for column, value in filters.items():
-            df_filtered = df_filtered[df_filtered[column].astype(str).str.lower() == str(value).lower()]
-        
-        return df_filtered

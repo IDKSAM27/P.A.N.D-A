@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, List, Dict, Any 
 from pydantic import BaseModel
 
 class Result(BaseModel):
@@ -12,6 +12,7 @@ class Result(BaseModel):
     result_type: str = "message"  # e.g., 'table', 'plot', 'value', 'error'
     data: Optional[Any] = None
     message: str
+    plot_data: Optional[Dict[str, Any]] = None
 
     class Config:
         # Allows creating the model from a dictionary or other attributes

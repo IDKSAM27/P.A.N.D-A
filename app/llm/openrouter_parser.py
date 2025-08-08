@@ -62,7 +62,6 @@ class OpenRouterParser(LLMInterface):
             print(f"Error parsing LLM response: {e}\nRaw content from LLM: {raw_content}")
             raise
 
-# In class OpenRouterParser:
 
     def _build_system_prompt(self, df_columns: List[str]) -> str:
         """
@@ -103,3 +102,45 @@ class OpenRouterParser(LLMInterface):
           "description": "Calculate the total sales grouped by coffee type."
         }}
         """
+
+    def _build_system_prompt(self, df_columns: List[str]) -> str:
+        """
+        Creates a detailed system prompt for the LLM.
+        """
+        return f\"\"\"
+        You are an expert at parsing natural language commands into structured JSON format.
+        Your task is to analyze the user's command and convert it into a JSON object.
+
+        The user is working with a dataset that has the following columns:
+        ---
+        {', '.join(df_columns)}
+        ---
+        
+        CRITICAL RULE: You MUST ONLY use the column names from the list above for the
+        'target_column', 'group_by', and 'filters' fields. Do not invent or infer
+        column names. If the user says "product", and the column is "Coffee_type",
+        you MUST use "Coffee_type".
+
+        Analyze the user's command to determine the operation and fields.
+
+        - 'operation': 'mean', 'sum', 'count', 'median', 'min', 'max', or 'plot'.
+        - 'target_column': The column on which to perform the operation.
+        - 'group_by': A list of columns to group the data by.
+        - 'filters': A dictionary of filters to apply before the operation.
+        - 'plot_type': If the operation is 'plot', specify the chart type (e.g., 'bar', 'line'). Otherwise, this should be null.
+        - 'description': A one-sentence summary of the command.
+
+        You MUST respond with ONLY a valid JSON object. Do not include any explanatory text.
+        
+        Example for plotting:
+        Command: "plot the total units sold by day as a bar chart"
+        JSON output:
+        {{
+          "operation": "plot",
+          "target_column": "Units Sold",
+          "group_by": ["Day"],
+          "filters": null,
+          "plot_type": "bar",
+          "description": "Plot the total units sold by day as a bar chart."
+        }}
+        \"\"\"

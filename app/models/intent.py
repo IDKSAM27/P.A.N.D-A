@@ -1,6 +1,6 @@
 # voice_data_assistant/app/models/intent.py
 
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 class Intent(BaseModel):
@@ -12,6 +12,7 @@ class Intent(BaseModel):
     group_by: Optional[List[str]] = Field(None, description="A list of columns to group the data by, e.g., ['region', 'product'].")
     filters: Optional[Dict[str, str]] = Field(None, description="A dictionary of filters to apply, e.g., {'year': '2023'}.")
     description: Optional[str] = Field(None, description="A natural language description of the operation to be performed.")
+    plot_type: Optional[str] = None
 
     class Config:
         # Allows creating the model from a dictionary
