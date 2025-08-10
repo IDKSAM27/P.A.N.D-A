@@ -2,112 +2,71 @@
 
 import os
 import json
+import logging
 import requests
 from typing import List
-from app.interfaces.llm_interface import LLMInterface
+from app.interfaces.llm_interface import LLMInterface # <-- CORRECTED IMPORT
 from app.models.intent import Intent
 
-class OpenRouterParser(LLMInterface):
+class OpenRouterParser(LLMInterface): # <-- CORRECTED CLASS INHERITANCE
     """
-    An LLM parser that uses the OpenRouter API to extract intent.
+    An intent parser that uses the OpenRouter API to understand natural language commands.
     """
-    def __init__(self, api_key: str, model_name: str = "mistralai/mistral-7b-instruct"):
+    def __init__(self, api_key: str):
         if not api_key:
-            raise ValueError("OpenRouter API key is required.")
+            raise ValueError("API key for OpenRouter is required.")
         self.api_key = api_key
-        self.model_name = model_name
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
 
-    def parse_command(self, command: str, df_columns: List[str]) -> Intent:
+    def parse(self, command: str, df_columns: List[str]) -> Intent:
         """
-        Sends the command to the OpenRouter API and parses the response.
+        Parses the user command by making an API call to an LLM via OpenRouter.
         """
         system_prompt = self._build_system_prompt(df_columns)
         
-        request_body = { "model": self.model_name, "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": command}] }
-        raw_content = ""
         try:
+            logging.info("-> [LLM Parser] Sending request to OpenRouter...")
             response = requests.post(
                 url=self.api_url,
-                headers={ "Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json", "HTTP-Referer": "http://localhost", "X-Title": "P.A.N.D-A (Pandas Assistant for Natural Data Analytics)" },
-                data=json.dumps(request_body)
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "mistralai/mistral-7b-instruct:free",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": command}
+                    ]
+                }
             )
+
             response.raise_for_status()
             
-            response_json = response.json()
-            raw_content = response_json['choices'][0]['message']['content']
+            response_text = response.json()['choices'][0]['message']['content']
+            logging.info(f"-> [LLM Parser] Received raw response: {response_text}")
             
-            json_start_index = raw_content.find('{')
-            json_end_index = raw_content.rfind('}')
+            json_response = json.loads(response_text)
             
-            if json_start_index == -1 or json_end_index == -1:
-                raise json.JSONDecodeError("Could not find a valid JSON object in the LLM response.", raw_content, 0)
-
-            json_string = raw_content[json_start_index : json_end_index + 1]
-            intent_data = json.loads(json_string)
-
-            # --- FIX: ADDED SAFETY NET FOR 'group_by' FIELD ---
-            # If the LLM returns a string instead of a list for group_by, fix it here.
-            if 'group_by' in intent_data and isinstance(intent_data['group_by'], str):
-                print("-> [Parser] Correcting 'group_by' from string to list.")
-                intent_data['group_by'] = [intent_data['group_by']]
-            # --- END OF FIX ---
+            intent = Intent(**json_response)
+            logging.info(f"-> [LLM Parser] Successfully parsed intent: {intent.model_dump_json(indent=2)}")
+            return intent
             
-            return Intent(**intent_data)
-
-        except requests.exceptions.HTTPError as e:
-            print(f"HTTP Error calling OpenRouter API: {e}\nResponse Body: {e.response.text}")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"-> [LLM Parser] API request failed: {e}")
+            raise ConnectionError(f"Failed to connect to OpenRouter API: {e}")
+        except (json.JSONDecodeError, KeyError) as e:
+            logging.error(f"-> [LLM Parser] Failed to parse LLM response: {e}")
+            raise ValueError(f"Could not parse the response from the LLM. Raw response: {response_text}")
+        except Exception as e:
+            logging.error(f"-> [LLM Parser] An unexpected error occurred: {e}")
             raise
-        except (KeyError, json.JSONDecodeError) as e:
-            print(f"Error parsing LLM response: {e}\nRaw content from LLM: {raw_content}")
-            raise
-
 
     def _build_system_prompt(self, df_columns: List[str]) -> str:
         """
         Creates a detailed system prompt for the LLM.
         """
-        # --- FIX: Added explicit instruction to only use provided columns ---
         return f"""
-        You are an expert at parsing natural language commands into structured JSON format.
-        Your task is to analyze the user's command and convert it into a JSON object.
-
-        The user is working with a dataset that has the following columns:
-        ---
-        {', '.join(df_columns)}
-        ---
-        
-        CRITICAL RULE: You MUST ONLY use the column names from the list above for the
-        'target_column', 'group_by', and 'filters' fields. Do not invent or infer
-        column names. If the user says "product", and the column is "Coffee_type",
-        you MUST use "Coffee_type".
-
-        Analyze the user's command to determine the operation and fields.
-
-        - 'operation': 'mean', 'sum', 'count', 'median', 'min', 'max', or 'plot'.
-        - 'group_by': MUST BE A LIST of column names to group by.
-        - 'filters': A dictionary of filters.
-        - 'description': A one-sentence summary of the command.
-
-        You MUST respond with ONLY a valid JSON object. Do not include any explanatory text.
-        
-        Example for this dataset:
-        Command: "total sales by coffee type"
-        JSON output:
-        {{
-          "operation": "sum",
-          "target_column": "Sales",
-          "group_by": ["Coffee_type"],
-          "filters": null,
-          "description": "Calculate the total sales grouped by coffee type."
-        }}
-        """
-
-    def _build_system_prompt(self, df_columns: List[str]) -> str:
-        """
-        Creates a detailed system prompt for the LLM.
-        """
-        return f\"\"\"
         You are an expert at parsing natural language commands into structured JSON format.
         Your task is to analyze the user's command and convert it into a JSON object.
 
@@ -143,4 +102,4 @@ class OpenRouterParser(LLMInterface):
           "plot_type": "bar",
           "description": "Plot the total units sold by day as a bar chart."
         }}
-        \"\"\"
+        """
