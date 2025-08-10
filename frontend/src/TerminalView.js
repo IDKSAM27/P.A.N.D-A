@@ -1,24 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './TerminalView.css';
 
-const PADDING = 20; // The space from the edge of the screen
+const PADDING = 20;
 
 function TerminalView() {
   const [logs, setLogs] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
-  
-  // --- State for Dragging ---
-  const [isDragging, setIsDragging] = useState(false);
-  // Default to bottom-right corner
   const [position, setPosition] = useState({ 
     x: window.innerWidth - 500 - PADDING, 
     y: window.innerHeight - 300 - PADDING 
   });
+  const [isDragging, setIsDragging] = useState(false);
   
   const terminalRef = useRef(null);
   const dragOffset = useRef({ x: 0, y: 0 });
+  const terminalBodyRef = useRef(null);
 
-  // --- WebSocket Logic (remains the same) ---
+  // WebSocket Logic
   useEffect(() => {
     const socket = new WebSocket('ws://127.0.0.1:8000/ws/logs');
     socket.onopen = () => {
@@ -28,24 +26,21 @@ function TerminalView() {
     socket.onmessage = (event) => setLogs(prev => [...prev, event.data]);
     socket.onclose = () => {
       setIsConnected(false);
-      setLogs(prev => [...prev, '[STATUS] Disconnected.']);
+      setLogs(prev => [...prev, '[STATUS] Disconnected from backend logs.']);
     };
     return () => socket.close();
   }, []);
 
-  // --- Auto-scroll Logic (remains the same) ---
-  const terminalBodyRef = useRef(null);
+  // Auto-scroll Logic
   useEffect(() => {
     if (terminalBodyRef.current) {
       terminalBodyRef.current.scrollTop = terminalBodyRef.current.scrollHeight;
     }
   }, [logs]);
 
-
-  // --- Event Handlers for Dragging ---
+  // Drag-and-snap Logic
   const onMouseDown = (e) => {
     setIsDragging(true);
-    // Calculate the offset from the mouse pointer to the element's top-left corner
     const { left, top } = terminalRef.current.getBoundingClientRect();
     dragOffset.current = { x: e.clientX - left, y: e.clientY - top };
   };
@@ -53,59 +48,43 @@ function TerminalView() {
   const onMouseUp = () => {
     if (!isDragging) return;
     setIsDragging(false);
-
-    // --- The "Snap" Logic ---
     const { clientWidth, clientHeight } = terminalRef.current;
     const { innerWidth, innerHeight } = window;
     let newPos = { ...position };
-
-    // Snap horizontally
-    if (position.x + clientWidth / 2 < innerWidth / 2) {
-      newPos.x = PADDING; // Snap left
-    } else {
-      newPos.x = innerWidth - clientWidth - PADDING; // Snap right
-    }
-
-    // Snap vertically
-    if (position.y + clientHeight / 2 < innerHeight / 2) {
-      newPos.y = PADDING; // Snap top
-    } else {
-      newPos.y = innerHeight - clientHeight - PADDING; // Snap bottom
-    }
-    
+    if (position.x + clientWidth / 2 < innerWidth / 2) newPos.x = PADDING;
+    else newPos.x = innerWidth - clientWidth - PADDING;
+    if (position.y + clientHeight / 2 < innerHeight / 2) newPos.y = PADDING;
+    else newPos.y = innerHeight - clientHeight - PADDING;
     setPosition(newPos);
   };
 
   const onMouseMove = (e) => {
     if (!isDragging) return;
-    // Calculate new position based on mouse movement and initial offset
-    const newX = e.clientX - dragOffset.current.x;
-    const newY = e.clientY - dragOffset.current.y;
-    setPosition({ x: newX, y: newY });
+    setPosition({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y });
   };
 
-  // --- Effect to add and clean up global event listeners ---
   useEffect(() => {
-    // We listen on the window so the drag continues even if the mouse leaves the terminal
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-
-    // Cleanup function to prevent memory leaks
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [isDragging, position]); // Re-attach listeners if state changes
+  }, [isDragging, position]);
 
+  // --- NEW: Helper function to determine CSS class for a log line ---
+  const getLogClass = (log) => {
+    if (log.startsWith('[INFO]')) return 'log-info';
+    if (log.startsWith('[ERROR]')) return 'log-error';
+    if (log.startsWith('[STATUS]')) return 'log-status';
+    return 'log-default';
+  };
 
   return (
     <div
       ref={terminalRef}
       className={`terminal-view ${isDragging ? 'dragging' : ''}`}
-      style={{
-        top: `${position.y}px`,
-        left: `${position.x}px`,
-      }}
+      style={{ top: `${position.y}px`, left: `${position.x}px` }}
     >
       <div className="terminal-header" onMouseDown={onMouseDown}>
         <div className="terminal-title">Backend Logs</div>
@@ -115,7 +94,8 @@ function TerminalView() {
       </div>
       <div className="terminal-body" ref={terminalBodyRef}>
         {logs.map((log, index) => (
-          <div key={index} className="log-line">
+          // --- UPDATED: Apply the dynamic class here ---
+          <div key={index} className={`log-line ${getLogClass(log)}`}>
             <span className="log-prefix">&gt;</span>
             <span className="log-content">{log}</span>
           </div>
