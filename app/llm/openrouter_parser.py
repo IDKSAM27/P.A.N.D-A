@@ -5,10 +5,10 @@ import json
 import logging
 import requests
 from typing import List
-from app.interfaces.llm_interface import LLMInterface # <-- CORRECTED IMPORT
+from app.interfaces.llm_interface import LLMInterface
 from app.models.intent import Intent
 
-class OpenRouterParser(LLMInterface): # <-- CORRECTED CLASS INHERITANCE
+class OpenRouterParser(LLMInterface):
     """
     An intent parser that uses the OpenRouter API to understand natural language commands.
     """
@@ -18,11 +18,12 @@ class OpenRouterParser(LLMInterface): # <-- CORRECTED CLASS INHERITANCE
         self.api_key = api_key
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
 
-    def parse(self, command: str, df_columns: List[str]) -> Intent:
+    def parse_command(self, command: str, df_columns: List[str]) -> Intent:
         """
         Parses the user command by making an API call to an LLM via OpenRouter.
         """
         system_prompt = self._build_system_prompt(df_columns)
+        response_text = "" # Initialize to prevent reference before assignment in error handling
         
         try:
             logging.info("-> [LLM Parser] Sending request to OpenRouter...")
@@ -46,7 +47,15 @@ class OpenRouterParser(LLMInterface): # <-- CORRECTED CLASS INHERITANCE
             response_text = response.json()['choices'][0]['message']['content']
             logging.info(f"-> [LLM Parser] Received raw response: {response_text}")
             
-            json_response = json.loads(response_text)
+            # --- THE DEFINITIVE FIX ---
+            # Correctly checks for markdown code blocks using valid string literals.
+            clean_text = response_text.strip()
+            # if clean_text.startswith("```
+            #     clean_text = clean_text[7:-3].strip()
+            if clean_text.startswith("```"):
+                clean_text = clean_text[3:-3].strip()
+
+            json_response = json.loads(clean_text)
             
             intent = Intent(**json_response)
             logging.info(f"-> [LLM Parser] Successfully parsed intent: {intent.model_dump_json(indent=2)}")
@@ -94,6 +103,7 @@ class OpenRouterParser(LLMInterface): # <-- CORRECTED CLASS INHERITANCE
         Example for plotting:
         Command: "plot the total units sold by day as a bar chart"
         JSON output:
+        ```
         {{
           "operation": "plot",
           "target_column": "Units Sold",
@@ -102,4 +112,5 @@ class OpenRouterParser(LLMInterface): # <-- CORRECTED CLASS INHERITANCE
           "plot_type": "bar",
           "description": "Plot the total units sold by day as a bar chart."
         }}
+        ```
         """
