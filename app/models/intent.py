@@ -13,6 +13,8 @@ class Intent(BaseModel):
     filters: Optional[Dict[str, str]] = Field(None, description="A dictionary of filters to apply, e.g., {'year': '2023'}.")
     description: Optional[str] = Field(None, description="A natural language description of the operation to be performed.")
     plot_type: Optional[str] = None
+    limit: Optional[int] = None
+    sort_order: Optional[str] = 'desc'
 
     class Config:
         # Allows creating the model from a dictionary
