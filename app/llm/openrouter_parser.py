@@ -85,9 +85,7 @@ class OpenRouterParser(LLMInterface):
         ---
         
         CRITICAL RULE: You MUST ONLY use the column names from the list above for the
-        'target_column', 'group_by', and 'filters' fields. Do not invent or infer
-        column names. If the user says "product", and the column is "Coffee_type",
-        you MUST use "Coffee_type".
+        'target_column', 'group_by', and 'filters' fields. Do not invent or infer names.
 
         Analyze the user's command to determine the operation and fields.
 
@@ -95,22 +93,42 @@ class OpenRouterParser(LLMInterface):
         - 'target_column': The column on which to perform the operation.
         - 'group_by': A list of columns to group the data by.
         - 'filters': A dictionary of filters to apply before the operation.
-        - 'plot_type': If the operation is 'plot', specify the chart type (e.g., 'bar', 'line'). Otherwise, this should be null.
+        - 'plot_type': If the operation is 'plot', specify the chart type (e.g., 'bar', 'line').
+        - 'limit': The number of rows to return (e.g., for "top 5", limit is 5). Default is null.
+        - 'sort_order': 'asc' for ascending (lowest) or 'desc' for descending (highest). Default is 'desc'.
         - 'description': A one-sentence summary of the command.
 
         You MUST respond with ONLY a valid JSON object. Do not include any explanatory text.
         
-        Example for plotting:
-        Command: "plot the total units sold by day as a bar chart"
+        Example for Top N query:
+        Command: "show me the top 3 coffee types by sales"
         JSON output:
         ```
         {{
-          "operation": "plot",
+          "operation": "sum",
+          "target_column": "Sales",
+          "group_by": ["Coffee_type"],
+          "filters": null,
+          "plot_type": null,
+          "limit": 3,
+          "sort_order": "desc",
+          "description": "Show the top 3 coffee types by sales."
+        }}
+        ```
+
+        Example for Lowest N query:
+        Command: "what are the 2 days with the lowest units sold"
+        JSON output:
+        ```
+        {{
+          "operation": "sum",
           "target_column": "Units Sold",
           "group_by": ["Day"],
           "filters": null,
-          "plot_type": "bar",
-          "description": "Plot the total units sold by day as a bar chart."
+          "plot_type": null,
+          "limit": 2,
+          "sort_order": "asc",
+          "description": "Show the 2 days with the lowest units sold."
         }}
         ```
         """
