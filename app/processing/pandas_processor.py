@@ -43,6 +43,7 @@ class PandasProcessor(ProcessorInterface):
             
             df_filtered = self._apply_filters(df, resolved_filters)
             
+            # --- Plotting Logic ---
             if intent.operation == 'plot':
                 if not group_by_columns or not target_column:
                     raise ValueError("Plotting requires at least one grouping column and a target column.")
@@ -72,21 +73,29 @@ class PandasProcessor(ProcessorInterface):
                     }
                 )
 
+            # --- Aggregation and "Top N" Logic ---
             if intent.operation == 'count' and not group_by_columns:
                 count = len(df_filtered)
                 return Result(result_type='value', data=count, message=f"{intent.description} Result: {count}.")
 
             if group_by_columns:
                 if intent.operation == 'count':
-                    result_data = df_filtered.groupby(group_by_columns).size()
-                    message = f"Successfully performed count grouped by {group_by_columns}."
+                    agg_result = df_filtered.groupby(group_by_columns).size()
+                    message = f"Successfully performed count grouped by {', '.join(group_by_columns)}."
                 else:
                     if not target_column:
                          raise ValueError("A target column is required for this grouped aggregation.")
-                    result_data = df_filtered.groupby(group_by_columns)[target_column].agg(intent.operation)
-                    message = f"Successfully performed '{intent.operation}' on '{target_column}' grouped by {group_by_columns}."
+                    agg_result = df_filtered.groupby(group_by_columns)[target_column].agg(intent.operation)
+                    message = f"Successfully performed '{intent.operation}' on '{target_column}' grouped by {', '.join(group_by_columns)}."
                 
-                return Result(result_type='table', data=result_data.reset_index(name='result').to_dict(orient='records'), message=message)
+                result_df = agg_result.reset_index(name='result')
+                ascending = intent.sort_order == 'asc'
+                result_df = result_df.sort_values(by='result', ascending=ascending)
+
+                if intent.limit:
+                    result_df = result_df.head(intent.limit)
+
+                return Result(result_type='table', data=result_df.to_dict(orient='records'), message=message)
             
             if target_column:
                 result_val = df_filtered[target_column].agg(intent.operation)
