@@ -24,7 +24,7 @@ def create_sample_dataframe() -> pd.DataFrame:
 
 def main():
     """
-    Main function to initialize and run the voice data assistant pipeline.
+    Main function to initialize and run the P.A.N.D-A pipeline.
     """
     # 1. Load environment variables from .env file
     load_dotenv()

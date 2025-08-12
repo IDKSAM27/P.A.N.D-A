@@ -1,5 +1,3 @@
-# voice_data_assistant/api/main.py
-
 import os
 import sys
 import pandas as pd
@@ -61,7 +59,7 @@ api_key = os.getenv("OPENROUTER_API_KEY")
 llm_parser = OpenRouterParser(api_key=api_key)
 data_processor = PandasProcessor()
 pipeline = CommandPipeline(llm_parser=llm_parser, data_processor=data_processor)
-app = FastAPI(title="Voice Data Assistant API", version="1.4.2")
+app = FastAPI(title="P.A.N.D-A API", version="1.4.2")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 dataframes_cache = {}
 

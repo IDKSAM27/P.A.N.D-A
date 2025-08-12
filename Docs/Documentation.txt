@@ -64,3 +64,8 @@ Also added previewing of the data file selected (only the top 5 row, for now)
 
 We'll add support for plotting charts, basically visual representation.
 I'll use: chart.js and react-chartjs-2
+
+====================================================================================================================
+
+Intent and pandas_processor has to be updated to support the new charting functionality.
+Currently, the template is designed to handle basic data processing and visualization.
