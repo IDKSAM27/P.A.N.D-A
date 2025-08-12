@@ -1,5 +1,3 @@
-# voice_data_assistant/app/llm/openrouter_parser.py
-
 import os
 import json
 import logging

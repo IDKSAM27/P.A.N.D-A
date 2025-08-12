@@ -1,5 +1,3 @@
-# voice_data_assistant/api/main.py
-
 import os
 import sys
 import pandas as pd
