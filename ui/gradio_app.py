@@ -1,5 +1,3 @@
-# voice_data_assistant/ui/gradio_app.py
-
 import os
 import sys
 import gradio as gr

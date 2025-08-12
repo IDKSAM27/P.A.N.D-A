@@ -1,5 +1,3 @@
-# voice_data_assistant/app/models/intent.py
-
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 

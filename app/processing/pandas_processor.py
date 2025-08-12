@@ -1,5 +1,3 @@
-# voice_data_assistant/app/processing/pandas_processor.py
-
 import pandas as pd
 from typing import List, Optional
 from app.interfaces.processor_interface import ProcessorInterface

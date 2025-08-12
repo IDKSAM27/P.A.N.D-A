@@ -1,5 +1,3 @@
-# voice_data_assistant/app/interfaces/llm_interface.py
-
 from abc import ABC, abstractmethod
 from typing import List
 from app.models.intent import Intent
