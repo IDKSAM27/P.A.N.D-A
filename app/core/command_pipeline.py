@@ -1,60 +1,32 @@
-import pandas as pd
 import logging
-from app.interfaces.llm_interface import LLMInterface
-from app.interfaces.processor_interface import ProcessorInterface
-from app.models.result import Result
-from app.models.intent import Intent
+import pandas as pd
+from app.core.command_registry import command_registry
 
 class CommandPipeline:
-    """
-    Orchestrates the process from natural language command to data result.
-    
-    This class connects the parsing and processing components, ensuring a smooth
-    flow of data from user input to final output. It relies on abstractions
-    (interfaces) for its components, making it highly modular and testable.
-    """
-    def __init__(self, llm_parser: LLMInterface, data_processor: ProcessorInterface):
-        """
-        Initializes the pipeline with dependency-injected components.
-
-        By accepting interfaces as arguments, we adhere to the Dependency
-        Inversion Principle, allowing us to swap implementations (e.g., use a
-        different LLM or data processor) without changing this core logic.
-
-        Args:
-            llm_parser (LLMInterface): The component for parsing text to intent.
-            data_processor (ProcessorInterface): The component for executing an intent.
-        """
+    def __init__(self, llm_parser):
         self.llm_parser = llm_parser
-        self.data_processor = data_processor
 
-    def run(self, command: str, df: pd.DataFrame) -> Result:
-        """
-        Executes the full pipeline: parse command, then execute intent.
+    def run(self, command: str, df: pd.DataFrame):
+        logging.info(f"-> [Pipeline] Processing command: '{command}'")
+        
+        # Step 1: Parse the command to get the command name and parameters
+        parsed_intent = self.llm_parser.parse_command(command)
+        command_name = parsed_intent.get("command_name")
+        parameters = parsed_intent.get("parameters", {})
 
-        Args:
-            command (str): The user's natural language command.
-            df (pd.DataFrame): The dataset to analyze.
+        if not command_name:
+            raise ValueError("LLM did not return a command_name.")
 
-        Returns:
-            Result: The final result of the operation.
-        """
-        logging.info(f"-> [Pipeline] Processing command: '{command}")
-        try:
-            # Step 1: Parse the natural language command into a structured intent.
-            # We provide the dataframe's column names to give the LLM context.
-            df_columns = df.columns.tolist()
-            intent = self.llm_parser.parse_command(command, df_columns)
-            logging.info(f"-> [Pipeline] LLM parsed intent: {intent.model_dump_json(indent=2)}")
+        # Step 2: Get the appropriate command module from the registry
+        command_module = command_registry.get_command(command_name)
+        if not command_module:
+            raise ValueError(f"Command '{command_name}' not found in registry.")
 
-            # Step 2: Execute the structured intent using the data processor.
-            result = self.data_processor.execute(intent, df)
-            logging.info(f"-> [Pipeline] Processor executed. Result type: {result.result_type}")
-            
-            return result
+        # Step 3: Validate the parameters against the command's specific model
+        validated_params = command_module.pydantic_model(**parameters)
+        logging.info(f"-> [Pipeline] Executing command '{command_name}' with validated params.")
 
-        except Exception as e:
-            # A top-level catch-all to ensure the pipeline always returns a Result object.
-            error_message = f"An unexpected error occurred in the command pipeline: {e}"
-            logging.info(f"-> [Pipeline] ERROR: {error_message}")
-            return Result(result_type='error', message=error_message)
+        # Step 4: Execute the command
+        result = command_module.execute(validated_params, df)
+        logging.info(f"-> [Pipeline] Processor executed. Result type: {result.result_type}")
+        return result

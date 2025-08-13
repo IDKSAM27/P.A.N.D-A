@@ -1,3 +1,5 @@
+# voice_data_assistant/api/main.py
+
 import os
 import sys
 import pandas as pd
@@ -15,12 +17,12 @@ from pydantic import BaseModel
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+# --- UPDATED IMPORTS for the new architecture ---
 from app.llm.openrouter_parser import OpenRouterParser
-from app.processing.pandas_processor import PandasProcessor
 from app.core.command_pipeline import CommandPipeline
 from app.models.result import Result
 
-# --- WebSocket and Logging Setup ---
+# --- Logging Setup (remains the same) ---
 class ConnectionManager:
     def __init__(self): self.active_connections: List[WebSocket] = []
     async def connect(self, ws: WebSocket): await ws.accept(); self.active_connections.append(ws)
@@ -33,33 +35,26 @@ class WebSocketLogHandler(logging.Handler):
     def __init__(self, manager: ConnectionManager): super().__init__(); self.manager = manager
     def emit(self, record): asyncio.create_task(self.manager.broadcast(self.format(record)))
 
-# --- THE FINAL, MOST ROBUST LOGGING CONFIGURATION ---
-# 1. Get the root logger
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
-
-# 2. Clear any existing handlers to prevent duplicate logs
 if root_logger.hasHandlers():
     root_logger.handlers.clear()
-
-# 3. Create and configure the handler for the CONSOLE (Uvicorn terminal)
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter("%(levelname)s:     %(message)s"))
 root_logger.addHandler(console_handler)
-
-# 4. Create and configure the handler for the WEBSOCKET (frontend terminal)
 websocket_handler = WebSocketLogHandler(manager)
 websocket_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
 root_logger.addHandler(websocket_handler)
-# --- End of Definitive Fix ---
-
-# --- Main Application Setup ---
+    
+# --- UPDATED Main Application Setup ---
 load_dotenv()
 api_key = os.getenv("OPENROUTER_API_KEY")
+
+# Initialize the new, simpler pipeline components
 llm_parser = OpenRouterParser(api_key=api_key)
-data_processor = PandasProcessor()
-pipeline = CommandPipeline(llm_parser=llm_parser, data_processor=data_processor)
-app = FastAPI(title="P.A.N.D-A API", version="1.4.2")
+pipeline = CommandPipeline(llm_parser=llm_parser) # No more data_processor!
+
+app = FastAPI(title="Voice Data Assistant API", version="2.0.0") # Version bump for major refactor
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 dataframes_cache = {}
 
@@ -75,7 +70,7 @@ def create_session(df: pd.DataFrame) -> dict:
         "shape": df.shape, "preview": df.head().to_dict(orient='records')
     }
 
-# --- API Endpoints ---
+# --- API Endpoints (no changes to their logic) ---
 @app.post("/upload_csv")
 async def upload_csv(file: UploadFile = File(...)):
     if not file.filename.endswith('.csv'):
@@ -110,13 +105,15 @@ async def load_sample_data():
 async def analyze_command(request: CommandRequest):
     session_id = request.session_id
     command = request.command
-    logging.info(f"Received command for Session ID {session_id}: '{command}'")
+    
     if session_id not in dataframes_cache:
         raise HTTPException(status_code=404, detail="Session ID not found.")
+    
     df = dataframes_cache[session_id]
+    
     try:
-        result = pipeline.run(command, df)
-        if result.result_type == 'error':
+        result = pipeline.run(command, df) # This call remains the same
+        if result.result_type == 'error': 
             raise HTTPException(status_code=400, detail=result.message)
         return result
     except Exception as e:
