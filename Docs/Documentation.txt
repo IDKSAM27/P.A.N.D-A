@@ -71,3 +71,28 @@ Intent and pandas_processor has to be updated to support the new charting functi
 Currently, the template is designed to handle basic data processing and visualization.
 
 None of those 3 commands work!
+
+====================================================================================================================
+
+The [object Object] error is a classic JavaScript issue that's easy to fix.
+
+The Cause: Incorrect Error Handling
+
+1. State Mismatch: When you click "Use Sample Data," we set the selectedFile state to a "mock" object: { name: 'coffee.csv' }. 
+This is just a plain JavaScript object, not a real File object that you get from an <input type="file">.
+
+2. Incorrect fetch Body: When you then click "Upload & Start," the handleUpload function takes this mock object and 
+tries to append it to FormData. FormData doesn't know how to handle a plain object, so it converts it to the 
+string "[object Object]".
+
+3. Backend Rejection: The FastAPI backend receives this string instead of a file and correctly throws an error.
+
+4. Frontend Error Display: Your React code catches this error, but err.message is now a complex error object from 
+the failed fetch request. When you try to render this error object directly in the UI, React displays it as the generic 
+string [object Object].
+
+The Solution: A Smarter handleUpload Function
+
+    - The fix is to prevent the upload from ever happening if the selected "file" is our mock object. 
+    We'll add a simple check in the handleUpload function. If the user clicks "Upload & Start" after loading the sample data, 
+    we can either do nothing or, even better, show a helpful message.
