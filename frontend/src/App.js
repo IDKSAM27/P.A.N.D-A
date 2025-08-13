@@ -35,7 +35,7 @@ function App() {
     // --- DEFINITIVE FIX for the [object Object] error ---
     if (!selectedFile || !(selectedFile instanceof File)) {
       //setError("Please choose a valid file from your computer to upload.");
-      setError("coffee.csv has already been chosen.")
+      setError("coffee.csv has been chosen as the Sample Data. Please proceed to STEP 2")
       return;
     }
     
