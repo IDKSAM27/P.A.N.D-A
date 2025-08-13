@@ -1,20 +1,20 @@
-import React, { useState } from "react";
-import "./App.css";
-import CommandInput from "./CommandInput";
-import TerminalView from "./TerminalView";
-import DataPreview from "./DataPreview";
+import React, { useState } from 'react';
+import './App.css';
+import CommandInput from './CommandInput';
+import TerminalView from './TerminalView';
+import DataPreview from './DataPreview';
 
 function App() {
   const [sessionInfo, setSessionInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState('');
+  const [error, setError] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [showTerminal, setShowTerminal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
   const resetForNewData = () => {
     setSessionInfo(null);
-    setError("");
+    setError('');
     setShowPreview(false);
   };
 
@@ -32,130 +32,97 @@ function App() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
-    setIsLoading("upload");
+    // --- DEFINITIVE FIX for the [object Object] error ---
+    if (!selectedFile || !(selectedFile instanceof File)) {
+      //setError("Please choose a valid file from your computer to upload.");
+      setError("coffee.csv has already been chosen.")
+      return;
+    }
+    
+    setIsLoading('upload');
     resetForNewData();
     const formData = new FormData();
-    formData.append("file", selectedFile);
+    formData.append('file', selectedFile);
+    
     try {
-      const response = await fetch("http://127.0.0.1:8000/upload_csv", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch('http://127.0.0.1:8000/upload_csv', { method: 'POST', body: formData });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || "Upload failed.");
+      if (!response.ok) throw new Error(data.detail || 'Upload failed.');
       processApiResponse(data);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "An unknown error occurred during upload.");
     } finally {
-      setIsLoading("");
+      setIsLoading('');
     }
   };
-
+  
   const handleLoadSample = async () => {
-    setIsLoading("sample");
+    setIsLoading('sample');
     resetForNewData();
-
-    // --- FIX: Set a mock file object to update the UI ---
-    setSelectedFile({ name: "coffee.csv" });
-
-    document.getElementById("csv-upload").value = null;
+    
+    // Use a flag or check for a real File object later
+    setSelectedFile({ name: 'coffee.csv', isSample: true }); 
+    
+    document.getElementById('csv-upload').value = null;
     try {
-      const response = await fetch("http://127.0.0.1:8000/sample_data", {
-        method: "POST",
-      });
+      const response = await fetch('http://127.0.0.1:8000/sample_data', { method: 'POST' });
       const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.detail || "Failed to load sample.");
+      if (!response.ok) throw new Error(data.detail || 'Failed to load sample.');
       processApiResponse(data);
     } catch (err) {
       setError(err.message);
-      // If sample fails, clear the mock file
-      setSelectedFile(null);
+      setSelectedFile(null); 
     } finally {
-      setIsLoading("");
+      setIsLoading('');
     }
   };
 
   return (
     <div className="App">
-      <button
-        className="terminal-toggle-btn"
-        onClick={() => setShowTerminal(!showTerminal)}
-      >
-        {showTerminal ? "Hide" : "Show"} Logs
+      <button className="terminal-toggle-btn" onClick={() => setShowTerminal(!showTerminal)}>
+        {showTerminal ? 'Hide' : 'Show'} Logs
       </button>
 
       <header className="App-header">
-        <h1>P.A.N.D-A</h1>
-        <h2>Pandas Assistant for Natural Data-Analytics</h2>
+        <h1>Voice Data Assistant</h1>
         <p>Your personal AI for data analysis.</p>
 
         <div className="container upload-container">
           <h2>Step 1: Provide Data</h2>
           <div className="file-input-wrapper">
-            <label htmlFor="csv-upload" className="file-input-label">
-              Choose Your File
-            </label>
-            <input
-              id="csv-upload"
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange}
-              className="file-input-hidden"
-            />
-            <button
-              className="button-secondary"
-              onClick={handleLoadSample}
-              disabled={!!isLoading}
-            >
-              {isLoading === "sample" ? "Loading..." : "Use Sample Data"}
+            <label htmlFor="csv-upload" className="file-input-label">Choose Your File</label>
+            <input id="csv-upload" type="file" accept=".csv" onChange={handleFileChange} className="file-input-hidden" />
+            <button className="button-secondary" onClick={handleLoadSample} disabled={!!isLoading}>
+              {isLoading === 'sample' ? 'Loading...' : 'Use Sample Data'}
             </button>
           </div>
           <div className="upload-actions">
-            <span className="file-name">
-              {selectedFile
-                ? `Selected: ${selectedFile.name}`
-                : "No file selected."}
-            </span>
-            <button
-              onClick={handleUpload}
-              disabled={!!isLoading || !selectedFile}
+            <span className="file-name">{selectedFile ? `Selected: ${selectedFile.name}` : 'No file selected.'}</span>
+            <button 
+              onClick={handleUpload} 
+              disabled={isLoading || !selectedFile} 
               className="button-primary"
             >
-              {isLoading === "upload" ? "Uploading..." : "Upload & Start"}
+              {isLoading === 'upload' ? 'Uploading...' : 'Upload & Start'}
             </button>
           </div>
         </div>
-
+        
         {error && <p className="error-message">{error}</p>}
-
+        
         {sessionInfo && (
           <>
             <div className="container-header">
               <h3>Data Loaded</h3>
-              <button
-                className="button-tertiary"
-                onClick={() => setShowPreview(true)}
-              >
-                Preview Data
-              </button>
+              <button className="button-tertiary" onClick={() => setShowPreview(true)}>Preview Data</button>
             </div>
-            <CommandInput
-              sessionId={sessionInfo.session_id}
-              columns={sessionInfo.columns}
-            />
+            <CommandInput sessionId={sessionInfo.session_id} columns={sessionInfo.columns} />
           </>
         )}
       </header>
 
       {showTerminal && <TerminalView />}
-      {showPreview && (
-        <DataPreview
-          data={sessionInfo.preview}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
+      {showPreview && sessionInfo && <DataPreview data={sessionInfo.preview} onClose={() => setShowPreview(false)} />}
     </div>
   );
 }
