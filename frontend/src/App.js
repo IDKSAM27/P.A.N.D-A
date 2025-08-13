@@ -85,7 +85,7 @@ function App() {
 
       <header className="App-header">
         <h1>P.A.N.D-A</h1>
-        <h2>Pandas Assistant for Natural Data-Analytics.</h2>
+        <h2>Pandas Assistant for Natural Data-Analytics</h2>
         <p>Your personal AI for data analysis.</p>
 
         <div className="container upload-container">

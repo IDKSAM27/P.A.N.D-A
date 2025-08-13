@@ -96,3 +96,36 @@ The Solution: A Smarter handleUpload Function
     - The fix is to prevent the upload from ever happening if the selected "file" is our mock object. 
     We'll add a simple check in the handleUpload function. If the user clicks "Upload & Start" after loading the sample data, 
     we can either do nothing or, even better, show a helpful message.
+
+====================================================================================================================
+
+Scalability DAMN IT, ITS TOO MUCH:
+
+The Professional Approach: A Pluggable Command Architecture
+
+    The core idea is to treat every analysis type (like describe, aggregate, plot) as a self-contained "Command" module. 
+    Each module will be responsible for everything related to its own operation.
+
+Here's how it will work:
+
+1. Self-Contained Commands: Each command will be a separate Python file. This file will contain:
+
+    - Its own Pydantic Model: Defines the exact parameters the command needs (e.g., plot needs a plot_type, 
+    aggregate needs a limit and sort_order). This eliminates the single, bloated Intent model.
+
+    - Its own Prompt Snippet: A small piece of text explaining only its own capability to the LLM.
+
+    - Its own Execution Logic: The code that actually performs the analysis.
+
+2. The Command Registry: We'll create a central CommandRegistry. When the application starts, 
+it will automatically scan a new app/commands directory, find all our command modules, and register them.
+
+3. Dynamic Prompt Generation: The LLMParser will now ask the Registry to assemble a master prompt from all the 
+registered command snippets. This means if you add a new command file, the prompt automatically updates to include it.
+
+4. Intelligent Dispatching: The LLMParser will be instructed to return a command_name. The main pipeline will 
+use this name to ask the Registry for the correct command module and then pass the validated parameters to it for execution.
+
+This is the gold standard for building extensible systems. To add a new analysis type like "correlation," 
+you will simply add a single file, correlation.py, and the entire application will instantly support it without you having 
+to modify any other part of the core system.
