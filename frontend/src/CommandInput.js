@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import Select from 'react-select';
-import ChartView from './ChartView'; 
+import Select from 'react-select'; // For the custom dropdown
+import ChartView from './ChartView'; // Assuming this exists for plotting
 
-// A helper component to render the results table
+// Helper component to render tables (unchanged)
 const ResultTable = ({ data }) => {
   if (!data || data.length === 0) {
     return null;
   }
-  const headers = Object.keys(data);
+  const headers = Object.keys(data[0]); // Assuming data is an array of objects
 
   return (
     <table className="result-table">
@@ -33,15 +33,15 @@ function CommandInput({ sessionId, columns }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-// Updated example options for react-select
-const exampleCommands = [
-  { value: '', label: 'Example' },
-  { value: 'total units sold by day', label: 'total units sold by day' },
-  { value: 'plot the total units sold by day as a bar chart', label: 'plot the total units sold by day as a bar chart' },
-  { value: 'show the top 3 coffee types by sales', label: 'show the top 3 coffee types by sales' },
-  { value: 'what are the 2 days with the lowest units sold', label: 'what are the 2 days with the lowest units sold' },
-  { value: 'describe the data', label: 'describe the data' },
-];
+  // List of example commands for the dropdown
+  const exampleCommands = [
+    { value: '', label: 'Example' },
+    { value: 'total units sold by day', label: 'total units sold by day' },
+    { value: 'plot the total units sold by day as a bar chart', label: 'plot the total units sold by day as a bar chart' },
+    { value: 'show the top 3 coffee types by sales', label: 'show the top 3 coffee types by sales' },
+    { value: 'what are the 2 days with the lowest units sold', label: 'what are the 2 days with the lowest units sold' },
+    { value: 'describe the data', label: 'describe the data' },
+  ];
 
   const handleAnalyze = async () => {
     if (!command) return;
@@ -71,79 +71,94 @@ const exampleCommands = [
     }
   };
 
-  // --- NEW: Handle example selection ---
+  // Handle example selection from the dropdown
   const handleExampleSelect = (option) => {
-      setCommand(option.value);
-    };
+    setCommand(option.value);
+  };
 
-    return (
-      <div className="container analysis-container">
-        {/* ...columns-display... */}
-        <div className="command-form">
-          <input
-            type="text"
-            value={command}
-            onChange={(e) => setCommand(e.target.value)}
-            onKeyPress={e => e.key === 'Enter' && handleAnalyze()}
-            placeholder="e.g., total units sold by day"
-            className="command-input"
-          />
-          {/* NEW: ReactSelect dropdown styled for dark mode */}
-          <Select
-            className="example-dropdown"
-            classNamePrefix="example"
-            options={exampleCommands}
-            defaultValue={exampleCommands[0]}
-            onChange={handleExampleSelect}
-            styles={{
-              control: base => ({
-                ...base,
-                backgroundColor: '#21272b',
-                borderColor: '#4caf50',
-                minWidth: 100,
-                width: 150,
-                color: '#e6e6e6',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-              }),
-              singleValue: base => ({ ...base, color: '#e6e6e6' }),
-              menu: base => ({
-                ...base,
-                backgroundColor: '#282c34',
-                color: '#e6e6e6',
-                borderRadius: '8px',
-                marginTop: 2,
-                boxShadow: '0 8px 24px rgba(0,100,0,0.15)',
-              }),
-              option: (base, state) => ({
-                ...base,
-                backgroundColor: state.isFocused
-                  ? '#2ecc40'
-                  : '#282c34',
-                color: state.isFocused ? '#fff' : '#e6e6e6',
-                cursor: 'pointer',
-              }),
-              dropdownIndicator: base => ({
-                ...base,
-                color: '#4caf50'
-              }),
-              indicatorSeparator: base => ({
-                ...base,
-                backgroundColor: '#4caf50'
-              }),
-            }}
-            isSearchable={false}
-          />
-          <button 
-            onClick={handleAnalyze} 
-            disabled={isLoading || !command} 
-            className="button-primary"
-          >
-            {isLoading ? 'Analyzing...' : 'Analyze'}
-          </button>
-        </div>
-        {/* ... result rendering ... */}
+  return (
+    <div className="container analysis-container">
+      <h2>Step 2: Ask a Question</h2>
+      
+      <div className="columns-display">
+        <strong>Available columns:</strong> <span>{columns.join(', ')}</span>
       </div>
-    );
-  }
-  
-  export default CommandInput;
+
+      <div className="command-form">
+        <input
+          type="text"
+          value={command}
+          onChange={(e) => setCommand(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="e.g., total units sold by day"
+          className="command-input"
+        />
+        {/* Custom dropdown with react-select */}
+        <Select
+          className="example-dropdown"
+          classNamePrefix="example"
+          options={exampleCommands}
+          defaultValue={exampleCommands[0]}
+          onChange={handleExampleSelect}
+          styles={{
+            control: base => ({
+              ...base,
+              backgroundColor: '#21272b',
+              borderColor: '#4caf50',
+              minWidth: 100,
+              width: 150,
+              color: '#e6e6e6',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+            }),
+            singleValue: base => ({ ...base, color: '#e6e6e6' }),
+            menu: base => ({
+              ...base,
+              backgroundColor: '#282c34',
+              color: '#e6e6e6',
+              borderRadius: '8px',
+              marginTop: 2,
+              boxShadow: '0 8px 24px rgba(0,100,0,0.15)',
+            }),
+            option: (base, state) => ({
+              ...base,
+              backgroundColor: state.isFocused
+                ? '#2ecc40'
+                : '#282c34',
+              color: state.isFocused ? '#fff' : '#e6e6e6',
+              cursor: 'pointer',
+            }),
+            dropdownIndicator: base => ({
+              ...base,
+              color: '#4caf50'
+            }),
+            indicatorSeparator: base => ({
+              ...base,
+              backgroundColor: '#4caf50'
+            }),
+          }}
+          isSearchable={false}
+        />
+        <button 
+          onClick={handleAnalyze} 
+          disabled={isLoading || !command} 
+          className="button-primary"
+        >
+          {isLoading ? 'Analyzing...' : 'Analyze'}
+        </button>
+      </div>
+
+      {error && <p className="error-message">{error}</p>}
+      
+      {result && (
+        <div className="result-container">
+          <p className="result-message">{result.message}</p>
+          {result.result_type === 'table' && <ResultTable data={result.data} />}
+          {result.result_type === 'value' && <p className="result-value">{result.data.toString()}</p>}
+          {result.result_type === 'plot' && <ChartView plotData={result.plot_data} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default CommandInput;
