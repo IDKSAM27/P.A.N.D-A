@@ -129,3 +129,9 @@ use this name to ask the Registry for the correct command module and then pass t
 This is the gold standard for building extensible systems. To add a new analysis type like "correlation," 
 you will simply add a single file, correlation.py, and the entire application will instantly support it without you having 
 to modify any other part of the core system.
+
+====================================================================================================================
+
+I'll use:
+    npm install react-select
+        : for example dropdown 
