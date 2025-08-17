@@ -244,3 +244,27 @@ h2 {
   background-color: #3e4451;
   border-radius: 8px;
 }
+
+.example-dropdown {
+  background-color: #333;
+  color: #e6e6e6;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 12px 16px; /* Match input padding */
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  margin-left: 20px; /* Space from the input */
+  min-width: 200px; /* Give it some width */
+}
+
+.example-dropdown:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+}
+
+.example-dropdown option {
+  background-color: #2d2d2d;
+  color: #e6e6e6;
+}

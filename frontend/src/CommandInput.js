@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import ChartView from './ChartView';
+import ChartView from './ChartView'; // Assuming this exists from previous steps
 
 // A helper component to render the results table
 const ResultTable = ({ data }) => {
   if (!data || data.length === 0) {
     return null;
   }
-  const headers = Object.keys(data[0]);
+  const headers = Object.keys(data);
 
   return (
     <table className="result-table">
@@ -31,6 +31,16 @@ function CommandInput({ sessionId, columns }) {
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // --- NEW: List of example commands ---
+  const exampleCommands = [
+    { value: '', label: 'Choose an example...' },
+    { value: 'total units sold by day', label: 'total units sold by day' },
+    { value: 'plot the total units sold by day as a bar chart', label: 'plot the total units sold by day as a bar chart' },
+    { value: 'show the top 3 coffee types by sales', label: 'show the top 3 coffee types by sales' },
+    { value: 'what are the 2 days with the lowest units sold', label: 'what are the 2 days with the lowest units sold' },
+    { value: 'describe the data', label: 'describe the data' },
+  ];
 
   const handleAnalyze = async () => {
     if (!command) return;
@@ -60,6 +70,11 @@ function CommandInput({ sessionId, columns }) {
     }
   };
 
+  // --- NEW: Handle example selection ---
+  const handleExampleSelect = (e) => {
+    setCommand(e.target.value);
+  };
+
   return (
     <div className="container analysis-container">
       <h2>Step 2: Ask a Question</h2>
@@ -75,12 +90,19 @@ function CommandInput({ sessionId, columns }) {
           onChange={(e) => setCommand(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="e.g., total units sold by day"
-          className="command-input" // <-- FIX: Added correct class
+          className="command-input"
         />
+        <select className="example-dropdown" onChange={handleExampleSelect}>
+          {exampleCommands.map((ex, index) => (
+            <option key={index} value={ex.value}>
+              {ex.label}
+            </option>
+          ))}
+        </select>
         <button 
           onClick={handleAnalyze} 
           disabled={isLoading || !command} 
-          className="button-primary" // <-- FIX: Added correct class
+          className="button-primary"
         >
           {isLoading ? 'Analyzing...' : 'Analyze'}
         </button>
@@ -93,7 +115,6 @@ function CommandInput({ sessionId, columns }) {
           <p className="result-message">{result.message}</p>
           {result.result_type === 'table' && <ResultTable data={result.data} />}
           {result.result_type === 'value' && <p className="result-value">{result.data.toString()}</p>}
-
           {result.result_type === 'plot' && <ChartView plotData={result.plot_data} />}
         </div>
       )}
