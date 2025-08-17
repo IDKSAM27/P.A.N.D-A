@@ -34,7 +34,7 @@ function CommandInput({ sessionId, columns }) {
 
   // --- NEW: List of example commands ---
   const exampleCommands = [
-    { value: '', label: 'Choose an example...' },
+    { value: '', label: 'Example' }, // Shortened for reduced horizontal length
     { value: 'total units sold by day', label: 'total units sold by day' },
     { value: 'plot the total units sold by day as a bar chart', label: 'plot the total units sold by day as a bar chart' },
     { value: 'show the top 3 coffee types by sales', label: 'show the top 3 coffee types by sales' },
