@@ -1,4 +1,3 @@
-# app/commands/base.py
 from abc import ABC, abstractmethod
 import pandas as pd
 from pydantic import BaseModel
@@ -41,7 +40,6 @@ class CommandInterface(ABC):
         """The method to execute the command's logic."""
         pass
 
-    # --- NEW: HELPER METHODS FOR ALL COMMANDS ---
     def _resolve_column(self, name: str, df_columns: List[str]) -> str:
         """Finds the actual column name that best matches the target name."""
         def normalize(s: str) -> str:
