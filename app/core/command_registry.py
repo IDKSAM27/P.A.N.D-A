@@ -28,41 +28,38 @@ class CommandRegistry:
     def generate_llm_prompt(self) -> str:
         prompt = """
         You are an expert at routing a user's command to the correct internal tool.
-        Based on the user's query, you must select the appropriate command and extract its specific parameters.
+        Based on the user's query, select the appropriate command and extract its parameters.
 
         Available commands:
         """
         for name, cmd in self._commands.items():
-            prompt += f"\n---"
-            prompt += f"\nCommand Name: \"{name}\"\n"
+            prompt += f"\n---\nCommand: \"{name}\"\n"
             prompt += f"Description: {cmd.description}\n"
-            prompt += f"Trigger words: {', '.join(cmd.trigger_words)}\n"
-            prompt += f"Parameters Schema: {cmd.pydantic_model.schema_json(indent=2)}\n"
+            prompt += f"Triggers: {', '.join(cmd.trigger_words)}\n"
+            prompt += f"Params (basic): {self._get_param_summary(cmd.pydantic_model)}\n"  # Short summary instead of full schema
 
         prompt += """
         ---
-        CRITICAL RULES:
-        1. You MUST respond with ONLY a single valid JSON object.
-        2. The JSON object must have two top-level keys: "command_name" and "parameters".
-        3. The "command_name" must be one of the exact command names listed above.
-        4. The "parameters" object must be a valid JSON object that strictly conforms to that command's specified Parameters Schema.
+        RULES:
+        1. Respond ONLY with valid JSON: {"command_name": "exact_name", "parameters": {param values}}
+        2. Use exact command names.
+        3. Parameters must match the command's requirements (e.g., aggregate_data needs 'agg_func' like 'sum').
 
-        Example:
-        User Query: "what is the total sales for espresso?"
-        Your JSON Response:
-        {
-          "command_name": "aggregate_data",
-          "parameters": {
-            "agg_func": "sum",
-            "target_column": "Sales",
-            "group_by": ["Coffee_type"],
-            "filters": {
-              "Coffee_type": "Espresso"
-            }
-          }
-        }
+        Example for "total units sold by day":
+        {"command_name": "aggregate_data", "parameters": {"agg_func": "sum", "target_column": "Units Sold", "group_by": ["Day"]}}
         """
         return prompt
+
+    def _get_param_summary(self, model_class) -> str:
+        params = []
+        for param_name, field in model_class.__fields__.items():
+            try:
+                param_type = getattr(field.annotation, "__name__", str(field.annotation))
+            except Exception:
+                param_type = "any"
+            required = '' if field.default is not None else ' (required)'
+            params.append(f"{param_name} ({param_type}){required}")
+        return ', '.join(params)
 
 # Create a single, shared instance of the registry
 command_registry = CommandRegistry()
